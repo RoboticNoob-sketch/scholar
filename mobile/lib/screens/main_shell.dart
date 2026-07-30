@@ -16,12 +16,21 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _index = 0;
+  int? _qrVoucherId;
 
   @override
   Widget build(BuildContext context) {
     final pages = [
-      HomeScreen(onShowQr: () => setState(() => _index = 1)),
-      const QrScreen(),
+      HomeScreen(
+        onShowQr: (voucherId) => setState(() {
+          _qrVoucherId = voucherId;
+          _index = 1;
+        }),
+      ),
+      QrScreen(
+        key: ValueKey(_qrVoucherId),
+        initialVoucherId: _qrVoucherId,
+      ),
       const HistoryScreen(),
       ProfileScreen(onLogout: widget.onLogout),
     ];

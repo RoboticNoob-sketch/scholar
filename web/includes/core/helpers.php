@@ -107,6 +107,48 @@ function voucher_qr_payload(string $voucherCode): string
     return 'VCH|' . trim($voucherCode);
 }
 
+/**
+ * All vouchers for a scholar in currently open distribution batches.
+ *
+ * @return list<array<string, mixed>>
+ */
+function student_open_vouchers(PDO $pdo, int $scholarId): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT v.id AS voucher_id, v.voucher_code, v.amount, v.status AS voucher_status,
+                b.id AS batch_id, b.name AS batch_name, b.distribution_date, b.venue,
+                p.id AS program_id, p.name AS program_name, c.claimed_at
+         FROM claim_vouchers v
+         JOIN distribution_batches b ON b.id = v.batch_id
+         JOIN scholarship_programs p ON p.id = b.program_id
+         LEFT JOIN claims c ON c.voucher_id = v.id
+         WHERE v.scholar_id = ? AND b.status = "open"
+         ORDER BY (v.status = "pending") DESC, b.distribution_date DESC, p.name ASC, b.id DESC'
+    );
+    $stmt->execute([$scholarId]);
+
+    $items = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $status = (string) $row['voucher_status'];
+        $items[] = [
+            'voucher_id' => (int) $row['voucher_id'],
+            'batch_id' => (int) $row['batch_id'],
+            'program_id' => (int) $row['program_id'],
+            'batch_name' => $row['batch_name'],
+            'program_name' => $row['program_name'],
+            'venue' => $row['venue'],
+            'distribution_date' => $row['distribution_date'],
+            'amount' => (float) $row['amount'],
+            'amount_formatted' => format_money((float) $row['amount']),
+            'voucher_status' => $status,
+            'voucher_qr' => $status === 'pending' ? voucher_qr_payload($row['voucher_code']) : null,
+            'claimed_at' => $row['claimed_at'] ?: null,
+        ];
+    }
+
+    return $items;
+}
+
 function normalize_qr_payload(string $raw): string
 {
     $payload = trim($raw);
