@@ -60,18 +60,12 @@ foreach ($stats->fetchAll() as $row) {
     $counts['total'] += (int) $row['cnt'];
 }
 
-$vouchers = $pdo->prepare(
-    'SELECT v.*, s.student_no, s.first_name, s.last_name, c.claimed_at
-     FROM claim_vouchers v
-     JOIN scholars s ON s.id = v.scholar_id
-     LEFT JOIN claims c ON c.voucher_id = v.id
-     WHERE v.batch_id = ?
-     ORDER BY s.last_name, s.first_name'
-);
-$vouchers->execute([$id]);
-$rows = $vouchers->fetchAll();
+$voucherQuery = batch_vouchers_sql($id);
+$page = pagination_page();
+$result = paginate($pdo, $voucherQuery['sql'], $voucherQuery['params'], $page);
+$rows = $result['rows'];
 
-render_admin_layout($pdo, 'batches', $batch['name'], function () use ($batch, $counts, $rows, $id): void {
+render_admin_layout($pdo, 'batches', $batch['name'], function () use ($batch, $counts, $rows, $id, $result): void {
     echo '<div class="breadcrumb">Admin / Distribution Batches / ' . e($batch['name']) . '</div>';
     echo '<div class="page-header"><div><h1 class="page-title">' . e($batch['name']) . '</h1>';
     echo '<div class="page-subtitle">' . e($batch['program_name']) . ' · ' . e($batch['venue']) . ' · ' . e(format_date($batch['distribution_date'])) . '</div></div>';
@@ -87,6 +81,7 @@ render_admin_layout($pdo, 'batches', $batch['name'], function () use ($batch, $c
         echo '<form method="post"><input type="hidden" name="action" value="close"><button class="btn btn-secondary btn-sm" type="submit">CLOSE BATCH</button></form>';
     }
     echo '<a class="btn btn-outline btn-sm" href="' . base_url('admin/export-batch.php?id=' . $id) . '">EXPORT CSV</a>';
+    echo '<a class="btn btn-outline btn-sm" href="' . base_url('admin/export-batch-pdf.php?id=' . $id) . '">EXPORT PDF</a>';
     echo '</div></div>';
 
     echo '<div class="kpi-grid">';
@@ -131,6 +126,7 @@ render_admin_layout($pdo, 'batches', $batch['name'], function () use ($batch, $c
             echo '</tr>';
         }
         echo '</tbody></table></div></div>';
+        render_table_footer('admin/batch-view.php', $result, 'vouchers', ['id']);
     }
     echo '</form>';
 });

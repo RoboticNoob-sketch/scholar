@@ -36,6 +36,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/pagination.php';
+require_once __DIR__ . '/report_templates.php';
+require_once __DIR__ . '/export.php';
+require_once __DIR__ . '/pdf_report.php';
 
 try {
     $pdo = db_connect($config);

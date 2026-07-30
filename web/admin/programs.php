@@ -54,14 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('admin/programs.php');
 }
 
-$programs = $pdo->query(
-    'SELECT p.*, COUNT(DISTINCT e.scholar_id) AS enrolled_count
-     FROM scholarship_programs p
-     LEFT JOIN enrollments e ON e.program_id = p.id AND e.status = "active"
-     GROUP BY p.id ORDER BY p.name'
-)->fetchAll();
+$page = pagination_page();
+$sql = 'SELECT p.*, COUNT(DISTINCT e.scholar_id) AS enrolled_count
+        FROM scholarship_programs p
+        LEFT JOIN enrollments e ON e.program_id = p.id AND e.status = "active"
+        GROUP BY p.id ORDER BY p.name';
+$result = paginate($pdo, $sql, [], $page);
+$programs = $result['rows'];
 
-render_admin_layout($pdo, 'programs', 'Programs', function () use ($programs): void {
+render_admin_layout($pdo, 'programs', 'Programs', function () use ($programs, $result): void {
     echo '<div class="breadcrumb">Admin / Programs</div>';
     echo '<div class="page-header"><h1 class="page-title">Scholarship Programs</h1>';
     echo '<a class="btn btn-primary btn-sm" href="' . base_url('admin/program-form.php') . '">ADD PROGRAM</a></div>';
@@ -80,5 +81,9 @@ render_admin_layout($pdo, 'programs', 'Programs', function () use ($programs): v
         echo '<td><a class="link-action" href="' . base_url('admin/program-form.php?id=' . (int) $p['id']) . '">Edit</a></td>';
         echo '</tr>';
     }
+    if (!$programs) {
+        echo '<tr><td colspan="7"><div class="empty-state">No programs found.</div></td></tr>';
+    }
     echo '</tbody></table></div></div>';
+    render_table_footer('admin/programs.php', $result, 'programs');
 });

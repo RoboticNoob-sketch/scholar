@@ -8,6 +8,7 @@ require_once __DIR__ . '/../includes/layout.php';
 $search = trim($_GET['q'] ?? '');
 $roleFilter = $_GET['role'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
+$page = pagination_page();
 
 $sql = 'SELECT u.*, s.id AS scholar_id, s.student_no, s.first_name, s.last_name
         FROM users u
@@ -29,9 +30,9 @@ if (in_array($statusFilter, ['active', 'inactive'], true)) {
 }
 $sql .= ' ORDER BY FIELD(u.role, "admin", "staff", "student"), u.username';
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$users = $stmt->fetchAll();
+$result = paginate($pdo, $sql, $params, $page);
+$users = $result['rows'];
+$filterKeys = ['q', 'role', 'status'];
 
 $counts = $pdo->query(
     'SELECT role, status, COUNT(*) AS cnt FROM users GROUP BY role, status'
@@ -45,7 +46,7 @@ foreach ($counts as $row) {
     }
 }
 
-render_admin_layout($pdo, 'users', 'Users', function () use ($users, $search, $roleFilter, $statusFilter, $stats): void {
+render_admin_layout($pdo, 'users', 'Users', function () use ($users, $search, $roleFilter, $statusFilter, $stats, $result, $filterKeys): void {
     echo '<div class="breadcrumb">Admin / Users</div>';
     echo '<div class="page-header"><h1 class="page-title">User Accounts</h1>';
     echo '<a class="btn btn-primary btn-sm" href="' . base_url('admin/user-form.php') . '">ADD USER</a></div>';
@@ -106,5 +107,6 @@ render_admin_layout($pdo, 'users', 'Users', function () use ($users, $search, $r
         echo '<tr><td colspan="6"><div class="empty-state">No users found.</div></td></tr>';
     }
     echo '</tbody></table></div></div>';
-    echo '<div class="table-meta">Showing ' . count($users) . ' users · Student logins are also created from the Scholars form</div>';
+    render_table_footer('admin/users.php', $result, 'users', $filterKeys);
+    echo '<div class="table-meta table-meta-note">Student logins are also created from the Scholars form</div>';
 });

@@ -6,30 +6,43 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_role($pdo, ['admin']);
 
 $id = (int) ($_GET['id'] ?? 0);
-header('Content-Type: text/csv');
-header('Content-Disposition: attachment; filename="batch-' . $id . '-vouchers.csv"');
-
-$out = fopen('php://output', 'w');
-fputcsv($out, ['Student No', 'Scholar Name', 'Voucher Code', 'Amount', 'Status', 'Claimed At']);
-
-$stmt = $pdo->prepare(
-    'SELECT s.student_no, s.first_name, s.last_name, v.voucher_code, v.amount, v.status, c.claimed_at
-     FROM claim_vouchers v
-     JOIN scholars s ON s.id = v.scholar_id
-     LEFT JOIN claims c ON c.voucher_id = v.id
-     WHERE v.batch_id = ?
-     ORDER BY s.last_name'
-);
-$stmt->execute([$id]);
-while ($row = $stmt->fetch()) {
-    fputcsv($out, [
-        $row['student_no'],
-        scholar_full_name($row),
-        $row['voucher_code'],
-        $row['amount'],
-        $row['status'],
-        $row['claimed_at'],
-    ]);
+if ($id <= 0) {
+    flash('error', 'Batch not found.');
+    redirect('admin/batches.php');
 }
-fclose($out);
-exit;
+
+$batchStmt = $pdo->prepare(
+    'SELECT b.name, p.name AS program_name FROM distribution_batches b
+     JOIN scholarship_programs p ON p.id = b.program_id WHERE b.id = ?'
+);
+$batchStmt->execute([$id]);
+$batch = $batchStmt->fetch();
+if (!$batch) {
+    flash('error', 'Batch not found.');
+    redirect('admin/batches.php');
+}
+
+$query = batch_vouchers_sql($id);
+$columns = batch_vouchers_columns();
+
+$stats = $pdo->prepare('SELECT status, COUNT(*) AS cnt FROM claim_vouchers WHERE batch_id = ? GROUP BY status');
+$stats->execute([$id]);
+$counts = ['pending' => 0, 'claimed' => 0, 'void' => 0];
+foreach ($stats->fetchAll() as $row) {
+    $counts[$row['status']] = (int) $row['cnt'];
+}
+
+$meta = report_meta_lines('Batch Voucher Report', [
+    'Batch: ' . $batch['name'],
+    'Program: ' . $batch['program_name'],
+    'Pending: ' . $counts['pending'] . ' · Claimed: ' . $counts['claimed'] . ' · Void: ' . $counts['void'],
+]);
+
+stream_csv_from_query(
+    $pdo,
+    export_filename('batch-' . $id . '-vouchers'),
+    $meta,
+    $columns,
+    $query['sql'],
+    $query['params']
+);

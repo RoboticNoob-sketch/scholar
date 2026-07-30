@@ -6,35 +6,21 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/layout.php';
 
 $batchId = (int) ($_GET['batch_id'] ?? 0);
+$page = pagination_page();
 $batches = $pdo->query('SELECT id, name FROM distribution_batches ORDER BY distribution_date DESC')->fetchAll();
 
-$sql = 'SELECT c.claimed_at, v.amount, v.voucher_code, v.status, b.name AS batch_name, p.name AS program_name,
-               s.student_no, s.first_name, s.last_name, u.username AS staff_name
-        FROM claims c
-        JOIN claim_vouchers v ON v.id = c.voucher_id
-        JOIN distribution_batches b ON b.id = v.batch_id
-        JOIN scholarship_programs p ON p.id = b.program_id
-        JOIN scholars s ON s.id = v.scholar_id
-        JOIN users u ON u.id = c.staff_user_id
-        WHERE 1=1';
-$params = [];
-if ($batchId > 0) {
-    $sql .= ' AND b.id = ?';
-    $params[] = $batchId;
-}
-$sql .= ' ORDER BY c.claimed_at DESC';
+$query = claims_report_sql($batchId);
+$summary = claims_report_summary($pdo, $batchId);
+$result = paginate($pdo, $query['sql'], $query['params'], $page);
+$rows = $result['rows'];
+$filterKeys = ['batch_id'];
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$rows = $stmt->fetchAll();
-
-$totalAmount = array_sum(array_map(fn ($r) => (float) $r['amount'], $rows));
-
-render_admin_layout($pdo, 'reports', 'Reports', function () use ($rows, $batches, $batchId, $totalAmount): void {
+render_admin_layout($pdo, 'reports', 'Reports', function () use ($rows, $batches, $batchId, $summary, $result, $filterKeys): void {
     echo '<div class="breadcrumb">Admin / Reports</div>';
     echo '<div class="page-header"><h1 class="page-title">Reports</h1>';
-    echo '<div class="table-actions">';
+    echo '<div class="table-actions btn-group">';
     echo '<a class="btn btn-outline btn-sm" href="' . base_url('admin/export-report.php?batch_id=' . $batchId) . '">EXPORT CSV</a>';
+    echo '<a class="btn btn-outline btn-sm" href="' . base_url('admin/export-report-pdf.php?batch_id=' . $batchId) . '">EXPORT PDF</a>';
     echo '</div></div>';
 
     echo '<form class="filter-bar" method="get">';
@@ -46,8 +32,8 @@ render_admin_layout($pdo, 'reports', 'Reports', function () use ($rows, $batches
     echo '</select></div><button class="btn btn-secondary btn-sm" type="submit">FILTER</button></form>';
 
     echo '<div class="kpi-grid">';
-    echo '<div class="card kpi-card"><div class="label">Total Claims</div><div class="value">' . count($rows) . '</div></div>';
-    echo '<div class="card kpi-card"><div class="label">Total Disbursed</div><div class="value">' . e(format_money($totalAmount)) . '</div></div>';
+    echo '<div class="card kpi-card"><div class="label">Total Claims</div><div class="value">' . $summary['total_claims'] . '</div></div>';
+    echo '<div class="card kpi-card"><div class="label">Total Disbursed</div><div class="value">' . e(format_money($summary['total_amount'])) . '</div></div>';
     echo '</div>';
 
     echo '<div class="card table-card"><div class="table-wrap"><table class="table"><thead><tr>';
@@ -67,4 +53,5 @@ render_admin_layout($pdo, 'reports', 'Reports', function () use ($rows, $batches
         echo '<tr><td colspan="6"><div class="empty-state">No claims recorded for this filter.</div></td></tr>';
     }
     echo '</tbody></table></div></div>';
+    render_table_footer('admin/reports.php', $result, 'claims', $filterKeys);
 });

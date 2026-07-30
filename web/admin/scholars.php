@@ -7,6 +7,7 @@ require_once __DIR__ . '/../includes/layout.php';
 
 $search = trim($_GET['q'] ?? '');
 $programId = (int) ($_GET['program_id'] ?? 0);
+$page = pagination_page();
 
 $sql = 'SELECT s.*, GROUP_CONCAT(DISTINCT p.name SEPARATOR ", ") AS programs
         FROM scholars s
@@ -26,12 +27,12 @@ if ($programId > 0) {
 }
 $sql .= ' GROUP BY s.id ORDER BY s.last_name, s.first_name';
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$scholars = $stmt->fetchAll();
+$result = paginate($pdo, $sql, $params, $page);
+$scholars = $result['rows'];
 $programs = $pdo->query('SELECT id, name FROM scholarship_programs WHERE status = "active" ORDER BY name')->fetchAll();
+$filterKeys = ['q', 'program_id'];
 
-render_admin_layout($pdo, 'scholars', 'Scholars', function () use ($scholars, $programs, $search, $programId): void {
+render_admin_layout($pdo, 'scholars', 'Scholars', function () use ($scholars, $programs, $search, $programId, $result, $filterKeys): void {
     echo '<div class="breadcrumb">Admin / Scholars</div>';
     echo '<div class="page-header"><h1 class="page-title">Scholars</h1>';
     echo '<a class="btn btn-primary btn-sm" href="' . base_url('admin/scholar-form.php') . '">ADD SCHOLAR</a></div>';
@@ -61,5 +62,5 @@ render_admin_layout($pdo, 'scholars', 'Scholars', function () use ($scholars, $p
         echo '<tr><td colspan="5"><div class="empty-state">No scholars found.</div></td></tr>';
     }
     echo '</tbody></table></div></div>';
-    echo '<div class="table-meta">Showing ' . count($scholars) . ' scholars</div>';
+    render_table_footer('admin/scholars.php', $result, 'scholars', $filterKeys);
 });
