@@ -1,0 +1,17 @@
+# Scholarly — Hostinger / Apache
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Uncomment after SSL is active in hPanel (Websites → SSL):
+    # RewriteCond %{HTTPS} !=on
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Block direct access to includes (PHP is still included server-side).
+<IfModule mod_authz_core.c>
+    <FilesMatch "\.(sql|md|log|env)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>

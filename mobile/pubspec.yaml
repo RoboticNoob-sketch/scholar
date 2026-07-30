@@ -1,0 +1,36 @@
+name: scholarly_mobile
+description: Scholarly — student app for scholarship QR distribution monitoring.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.4.0
+  permission_handler: ^11.3.1
+  flutter_secure_storage: 10.3.1
+  intl: ^0.19.0
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/slsu-tiaong-logo.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/images/slsu-tiaong-logo.png
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/slsu-tiaong-logo.png

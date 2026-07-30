@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Copy to config.local.php on the server (not committed to git).
+ * Hostinger: create this file in web/config/ after upload.
+ */
+return [
+    'base_url' => '',
+    'db' => [
+        'host' => 'localhost',
+        'name' => 'u123456789_scholarly',
+        'user' => 'u123456789_admin',
+        'pass' => 'your-database-password',
+    ],
+    // Optional: restrict mobile API CORS (comma-separated origins or array).
+    // 'allowed_origins' => ['https://yourdomain.com'],
+];

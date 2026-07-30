@@ -1,0 +1,5 @@
+*{box-sizing:border-box}
+body{background:var(--surface-page);color:var(--text-primary);font-family:var(--font-ui);margin:0}
+::selection{background:var(--accent);color:var(--text-on-accent)}
+a{color:var(--text-announcement);text-decoration:none}
+a:hover{color:var(--white-base);text-decoration:underline}

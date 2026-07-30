@@ -1,0 +1,11 @@
+/vendor/
+/web/assets/design-system/_ds_bundle.js
+*.log
+.env
+/web/config/config.local.php
+.idea/
+.vscode/
+mobile/build/
+mobile/android/build/
+mobile/.dart_tool/
+mobile/.flutter-plugins-dependencies

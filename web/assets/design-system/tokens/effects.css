@@ -1,0 +1,20 @@
+:root{
+--radius-minimal:2px;
+--radius-subtle:4px;
+--radius-standard:6px;
+--radius-comfortable:8px;
+--radius-medium:16px;
+--radius-large:100px;
+--radius-pill:500px;
+--radius-full-pill:9999px;
+--radius-circle:50%;
+
+--shadow-medium:rgba(0,0,0,0.3) 0px 8px 8px;
+--shadow-heavy:rgba(0,0,0,0.5) 0px 8px 24px;
+--shadow-inset-border:rgb(18,18,18) 0px 1px 0px,rgb(124,124,124) 0px 0px 0px 1px inset;
+--shadow-inset-border-focus:rgb(18,18,18) 0px 1px 0px,rgb(255,255,255) 0px 0px 0px 1px inset;
+
+--ease-standard:cubic-bezier(0.3,0,0,1); /* @kind other */
+--duration-fast:100ms; /* @kind other */
+--duration-standard:200ms; /* @kind other */
+}

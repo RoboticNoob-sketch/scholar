@@ -1,0 +1,26 @@
+:root{
+--text-size-section-title:1.5rem;
+--text-size-feature-heading:1.13rem;
+--text-size-body-bold:1rem;
+--text-size-body:1rem;
+--text-size-button-upper:0.88rem;
+--text-size-button:0.88rem;
+--text-size-nav:0.88rem;
+--text-size-caption:0.88rem;
+--text-size-small:0.75rem;
+--text-size-badge:0.66rem;
+--text-size-micro:0.63rem;
+
+--weight-regular:400;
+--weight-semibold:600;
+--weight-bold:700;
+--weight-extrabold:800;
+
+--lh-tight:1.30; /* @kind other */
+--lh-caption:1.52; /* @kind other */
+--lh-normal:normal; /* @kind other */
+
+--tracking-button-upper:1.6px;
+--tracking-button:0.14px;
+--tracking-normal:normal;
+}
