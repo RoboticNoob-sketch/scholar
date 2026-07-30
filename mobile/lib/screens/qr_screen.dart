@@ -16,6 +16,7 @@ class QrScreen extends StatefulWidget {
 class _QrScreenState extends State<QrScreen> {
   int _tab = 0;
   Map<String, dynamic>? _data;
+  String? _error;
 
   @override
   void initState() {
@@ -24,8 +25,17 @@ class _QrScreenState extends State<QrScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _error = null);
     final res = await ApiService.getStatus();
-    if (mounted) setState(() => _data = res);
+    if (!mounted) return;
+    if (res['success'] == true) {
+      setState(() => _data = res);
+    } else {
+      setState(() {
+        _data = null;
+        _error = res['error']?.toString() ?? 'Could not load QR codes';
+      });
+    }
   }
 
   @override
@@ -48,6 +58,12 @@ class _QrScreenState extends State<QrScreen> {
             onChanged: (i) => setState(() => _tab = i),
           ),
           const SizedBox(height: 20),
+          if (_error != null)
+            AppCard(
+              margin: const EdgeInsets.only(bottom: 16),
+              accentTop: AppTheme.negative,
+              child: Text(_error!, style: const TextStyle(color: AppTheme.negative, fontSize: 13)),
+            ),
           if (_tab == 0)
             _qrCard(
               data: voucherPending ? voucherQr : null,

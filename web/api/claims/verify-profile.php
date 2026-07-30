@@ -11,10 +11,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $body = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
-$payload = trim($body['payload'] ?? '');
+$payload = normalize_qr_payload(trim($body['payload'] ?? ''));
 $batchId = (int) ($body['batch_id'] ?? 0) ?: null;
 
-if ($payload === '' || !str_starts_with($payload, 'SCH|')) {
+if ($payload === '') {
+    json_response(['success' => false, 'error' => 'QR payload is required'], 422);
+}
+
+if (stripos($payload, 'VCH|') === 0 || preg_match('/^VCH[-A-Z0-9]+$/i', $payload)) {
+    json_response([
+        'success' => false,
+        'error' => 'This is a voucher QR. Switch to Voucher Scan after profile verification.',
+        'code' => 'wrong_qr_type',
+    ], 400);
+}
+
+if (stripos($payload, 'SCH|') !== 0) {
     json_response(['success' => false, 'error' => 'Invalid profile QR code'], 400);
 }
 
@@ -24,6 +36,8 @@ if (count($parts) !== 3) {
 }
 
 [, $publicId, $qrToken] = $parts;
+$publicId = trim($publicId);
+$qrToken = trim($qrToken);
 
 $stmt = $pdo->prepare('SELECT * FROM scholars WHERE public_id = ? AND qr_token = ? AND status = "active"');
 $stmt->execute([$publicId, $qrToken]);

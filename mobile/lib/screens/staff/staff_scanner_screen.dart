@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/qr_payload.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/page_header.dart';
@@ -133,6 +134,8 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
 
   Future<void> _handleScan(String raw) async {
     if (_processing) return;
+    final payload = normalizeQrPayload(raw);
+    if (payload.isEmpty) return;
     final now = DateTime.now();
     if (_lastScanAt != null && now.difference(_lastScanAt!) < const Duration(seconds: 2)) return;
     _lastScanAt = now;
@@ -163,7 +166,7 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
         }
         final res = await ApiService.redeemVoucher(
           batchId: widget.batchId!,
-          payload: raw.trim(),
+          payload: payload,
           verificationToken: _verificationToken,
         );
         if (res['success'] == true) {
@@ -181,12 +184,15 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
           await _feedback(success: false);
           final code = res['code']?.toString();
           final clearVerify = code == 'verification_invalid';
+          final wrongType = code == 'wrong_qr_type';
           setState(() {
             _success = false;
             _resultTitle = res['error']?.toString() ?? 'Scan failed';
-            _resultDetail = clearVerify
-                ? 'Go to Profile Verify and scan the same scholar again, then scan their voucher.'
-                : 'Try again or verify the voucher QR.';
+            _resultDetail = wrongType
+                ? 'Use Profile Verify for profile QR, then Voucher Scan for the claim voucher.'
+                : clearVerify
+                    ? 'Go to Profile Verify and scan the same scholar again, then scan their voucher.'
+                    : 'Try again or verify the voucher QR.';
             if (clearVerify) {
               _verificationToken = null;
               _verifiedScholarName = null;
@@ -194,7 +200,7 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
           });
         }
       } else {
-        final res = await ApiService.verifyProfile(raw.trim(), batchId: widget.batchId);
+        final res = await ApiService.verifyProfile(payload, batchId: widget.batchId);
         if (res['success'] == true) {
           final scholar = res['scholar'] as Map?;
           await _feedback(success: true);
@@ -208,10 +214,13 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
           });
         } else {
           await _feedback(success: false);
+          final wrongType = res['code']?.toString() == 'wrong_qr_type';
           setState(() {
             _success = false;
             _resultTitle = res['error']?.toString() ?? 'Verification failed';
-            _resultDetail = 'Profile QR not recognized or scholar inactive.';
+            _resultDetail = wrongType
+                ? 'Switch to Voucher Scan for claim voucher QR codes.'
+                : 'Ask the scholar to open My QR → Profile tab and pull down to refresh.';
             _verificationToken = null;
             _verifiedScholarName = null;
           });

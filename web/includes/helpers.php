@@ -71,12 +71,32 @@ function scholar_full_name(array $row): string
 
 function profile_qr_payload(array $scholar): string
 {
-    return 'SCH|' . $scholar['public_id'] . '|' . $scholar['qr_token'];
+    return 'SCH|' . trim($scholar['public_id']) . '|' . trim($scholar['qr_token']);
 }
 
 function voucher_qr_payload(string $voucherCode): string
 {
-    return 'VCH|' . $voucherCode;
+    return 'VCH|' . trim($voucherCode);
+}
+
+function normalize_qr_payload(string $raw): string
+{
+    $payload = trim($raw);
+    $payload = preg_replace('/[\x00-\x1F\x7F]/u', '', $payload) ?? $payload;
+
+    if (preg_match('/(SCH\|[^\s]+)/i', $payload, $match)) {
+        return $match[1];
+    }
+
+    if (preg_match('/(VCH\|[^\s]+)/i', $payload, $match)) {
+        return $match[1];
+    }
+
+    if (preg_match('/(VCH[-A-Z0-9]+)/i', $payload, $match)) {
+        return $match[1];
+    }
+
+    return $payload;
 }
 
 function generate_token(int $bytes = 32): string

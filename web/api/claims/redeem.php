@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $body = json_decode(file_get_contents('php://input') ?: '{}', true) ?: [];
 $batchId = (int) ($body['batch_id'] ?? 0);
-$payload = trim($body['payload'] ?? '');
+$payload = normalize_qr_payload(trim($body['payload'] ?? ''));
 $verificationToken = trim($body['verification_token'] ?? '');
 
 if (!$batchId || $payload === '') {
@@ -28,7 +28,16 @@ if ($verificationToken === '') {
     ], 403);
 }
 
-if (!str_starts_with($payload, 'VCH|')) {
+if (stripos($payload, 'SCH|') === 0) {
+    audit_log($pdo, (int) $user['id'], 'scan_failed', 'claim_voucher', null, 'Profile QR scanned as voucher');
+    json_response([
+        'success' => false,
+        'error' => 'This is a profile QR. Use Profile Verify first, then scan the voucher QR.',
+        'code' => 'wrong_qr_type',
+    ], 400);
+}
+
+if (stripos($payload, 'VCH|') !== 0) {
     if (preg_match('/^VCH[-A-Z0-9]+$/i', $payload)) {
         $payload = 'VCH|' . $payload;
     } else {
