@@ -4,15 +4,17 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const _path = '/scholarship-qr-monitor/web';
+  static const productionHost = 'https://scholarship-qr-monitor.online';
+  static const localWebPath = '/scholarship-qr-monitor/web';
 
   static const _defaultAndroidHosts = [
+    productionHost,
     'http://127.0.0.1:8080',
     'http://192.168.1.18',
     'http://192.168.1.19',
   ];
 
-  static String customHost = '';
+  static String customHost = productionHost;
   static String phoneBaseUrl = '';
   static String lastTriedUrl = '';
   static List<String> triedUrls = [];
@@ -22,24 +24,39 @@ class ApiService {
   static String? username;
   static Map<String, dynamic>? scholar;
 
+  static String webPathForHost(String host) {
+    final h = host.trim().toLowerCase().replaceAll(RegExp(r'/+$'), '');
+    if (h.contains('127.0.0.1') ||
+        h.contains('localhost') ||
+        h.contains('10.0.2.2') ||
+        RegExp(r'192\.168\.\d+\.\d+').hasMatch(h)) {
+      return localWebPath;
+    }
+    return '';
+  }
+
+  static String baseForHost(String host) {
+    final clean = host.trim().replaceAll(RegExp(r'/+$'), '');
+    if (clean.isEmpty) return productionHost;
+    return '$clean${webPathForHost(clean)}';
+  }
+
   static List<String> get _hosts {
     final hosts = <String>[];
     final custom = customHost.trim().replaceAll(RegExp(r'/+$'), '');
     if (custom.isNotEmpty) hosts.add(custom);
-    if (kIsWeb) return ['http://localhost'];
+    if (kIsWeb) return [productionHost];
     if (Platform.isAndroid) {
       hosts.addAll(_defaultAndroidHosts);
     } else {
-      hosts.add('http://localhost');
+      hosts.add(productionHost);
     }
     return hosts.toSet().toList();
   }
 
   static String get baseUrl {
     if (phoneBaseUrl.isNotEmpty) return phoneBaseUrl;
-    if (kIsWeb) return 'http://localhost$_path';
-    if (Platform.isAndroid) return '${_hosts.first}$_path';
-    return 'http://localhost$_path';
+    return baseForHost(_hosts.first);
   }
 
   static Map<String, String> get _headers => {
@@ -47,14 +64,18 @@ class ApiService {
         if (token != null) 'Authorization': 'Bearer $token',
       };
 
-  static Uri _uri(String path, [String? base]) => Uri.parse('${base ?? baseUrl}/$path');
+  static Uri _uri(String path, [String? base]) {
+    final root = (base ?? baseUrl).replaceAll(RegExp(r'/+$'), '');
+    final segment = path.replaceFirst(RegExp(r'^/+'), '');
+    return Uri.parse('$root/$segment');
+  }
 
   static Future<String?> _probeHost(String host) async {
-    final candidate = '$host$_path';
+    final candidate = baseForHost(host);
     lastTriedUrl = candidate;
     triedUrls.add(candidate);
     try {
-      final res = await http.get(_uri('login.php', candidate)).timeout(const Duration(seconds: 5));
+      final res = await http.get(_uri('login.php', candidate)).timeout(const Duration(seconds: 8));
       if (res.statusCode == 200) return candidate;
     } catch (_) {}
     return null;
@@ -62,8 +83,8 @@ class ApiService {
 
   static Future<String> resolveBaseUrl({bool force = false}) async {
     if (!force && phoneBaseUrl.isNotEmpty) return phoneBaseUrl;
-    if (kIsWeb) return 'http://localhost$_path';
-    if (!Platform.isAndroid) return 'http://localhost$_path';
+    if (kIsWeb) return baseForHost(productionHost);
+    if (!Platform.isAndroid) return baseForHost(productionHost);
 
     if (force) phoneBaseUrl = '';
     triedUrls = [];
@@ -85,7 +106,7 @@ class ApiService {
     Object? lastError;
 
     for (final host in _hosts) {
-      final candidate = '$host$_path';
+      final candidate = baseForHost(host);
       lastTriedUrl = candidate;
       triedUrls.add(candidate);
       try {
@@ -95,7 +116,7 @@ class ApiService {
               headers: _headers,
               body: jsonEncode({'username': user, 'password': password}),
             )
-            .timeout(const Duration(seconds: 12));
+            .timeout(const Duration(seconds: 15));
 
         phoneBaseUrl = candidate;
         final data = _decode(res.body, res.statusCode);
@@ -150,9 +171,12 @@ class ApiService {
     try {
       await resolveBaseUrl();
     } on StateError {
-      return {'success': false, 'error': 'Cannot reach server. Use Wi-Fi and check Server settings on login.'};
+      return {
+        'success': false,
+        'error': 'Cannot reach server. Check internet connection and Server settings on login.',
+      };
     }
-    final res = await http.get(_uri(path), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.get(_uri(path), headers: _headers).timeout(const Duration(seconds: 15));
     return _decode(res.body, res.statusCode);
   }
 
@@ -160,11 +184,14 @@ class ApiService {
     try {
       await resolveBaseUrl();
     } on StateError {
-      return {'success': false, 'error': 'Cannot reach server. Use Wi-Fi and check Server settings on login.'};
+      return {
+        'success': false,
+        'error': 'Cannot reach server. Check internet connection and Server settings on login.',
+      };
     }
     final res = await http
         .post(_uri(path), headers: _headers, body: jsonEncode(body))
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 15));
     return _decode(res.body, res.statusCode);
   }
 

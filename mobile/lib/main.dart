@@ -55,6 +55,8 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     final server = await SessionService.getServerHost();
     if (server != null && server.isNotEmpty) {
       ApiService.customHost = server;
+    } else {
+      ApiService.customHost = ApiService.productionHost;
     }
     if (token != null) {
       ApiService.token = token;

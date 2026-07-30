@@ -17,7 +17,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _username = TextEditingController();
   final _password = TextEditingController();
-  final _server = TextEditingController(text: 'http://127.0.0.1:8080');
+  final _server = TextEditingController(text: ApiService.productionHost);
   bool _loading = false;
   bool _obscure = true;
   bool _showServer = false;
@@ -31,12 +31,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _loadServer() async {
     var saved = await SessionService.getServerHost();
-    if (saved == 'http://192.168.1.18' || saved == 'http://192.168.37.246') {
-      saved = 'http://127.0.0.1:8080';
+    const legacy = {
+      'http://127.0.0.1:8080',
+      'http://192.168.1.18',
+      'http://192.168.1.19',
+      'http://192.168.37.246',
+    };
+    if (saved == null || saved.isEmpty || legacy.contains(saved)) {
+      saved = ApiService.productionHost;
       await SessionService.saveServerHost(saved);
     }
-    if (mounted && saved != null && saved.isNotEmpty) {
+    if (mounted) {
       setState(() => _server.text = saved!);
+      ApiService.customHost = saved;
     }
   }
 
@@ -66,7 +73,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {
       final tried = ApiService.triedUrls.isEmpty ? ApiService.lastTriedUrl : ApiService.triedUrls.join('\n');
       setState(() {
-        _error = 'Cannot reach server.\n\nYour router may block phone↔PC (AP isolation).\n\nFix options:\nA) Router: disable AP/client isolation\nB) USB: keep cable + use http://127.0.0.1:8080\nC) Hotspot: phone hotspot → PC joins → use PC ipconfig IP\n\nTried:\n$tried';
+        _error =
+            'Cannot reach server.\n\nUse mobile data or Wi-Fi with internet.\nDefault: ${ApiService.productionHost}\n\nTried:\n$tried';
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -151,14 +159,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _server,
                           decoration: const InputDecoration(
                             labelText: 'Server URL',
-                            hintText: 'http://127.0.0.1:8080',
+                            hintText: ApiService.productionHost,
                             prefixIcon: Icon(Icons.dns_outlined, size: 20),
                           ),
                           keyboardType: TextInputType.url,
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'Wi-Fi: http://YOUR_PC_IP (no port) · USB: http://127.0.0.1:8080',
+                          'Live: https://scholarship-qr-monitor.online · Local USB: http://127.0.0.1:8080',
                           style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
                         ),
                       ],

@@ -3,17 +3,19 @@
 declare(strict_types=1);
 
 /**
- * Copy to config.local.php on the server (not committed to git).
- * Hostinger: create this file in web/config/ after upload.
+ * ON SERVER: copy this file to config.local.php in the same folder, then set your DB password.
+ * Do NOT commit config.local.php to Git (contains secrets).
+ *
+ * Hostinger path: public_html/web/config/config.local.php
  */
 return [
     'base_url' => '',
     'db' => [
         'host' => 'localhost',
-        'name' => 'u123456789_scholarly',
-        'user' => 'u123456789_admin',
-        'pass' => 'your-database-password',
+        'port' => 3306,
+        'name' => 'u626072890_scholarship',
+        'user' => 'u626072890_slsu',
+        'pass' => 'PASTE_YOUR_DB_PASSWORD_HERE',
+        'charset' => 'utf8mb4',
     ],
-    // Optional: restrict mobile API CORS (comma-separated origins or array).
-    // 'allowed_origins' => ['https://yourdomain.com'],
 ];
