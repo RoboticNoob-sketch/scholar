@@ -11,6 +11,28 @@ This guide covers **shared web hosting** (Premium/Business plans with PHP + MySQ
 
 ## Recommended layout
 
+### Option A — Git deploy (recommended for Hostinger Git)
+
+Connect the GitHub repo to Hostinger. The repo root becomes `public_html/`. Root `.htaccess` routes the domain to the `web/` folder automatically.
+
+```
+public_html/              ← Git repo root
+  .htaccess
+  index.php
+  web/
+    login.php
+    admin/
+    api/
+    config/
+      config.local.php    ← upload manually (not in Git)
+```
+
+Your login URL: `https://yourdomain.com/login.php`
+
+See [`REDEPLOY.md`](REDEPLOY.md) for pull steps.
+
+### Option B — Manual upload
+
 Upload the **contents of the `web/` folder** directly into `public_html/` so your site lives at the domain root:
 
 ```

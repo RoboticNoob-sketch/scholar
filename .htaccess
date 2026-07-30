@@ -1,0 +1,17 @@
+# Hostinger Git deploy: repo root = public_html, app lives in web/
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block source folders and git metadata from the web
+    RewriteRule ^(database|mobile|deploy|docs|scripts)/ - [F,L]
+    RewriteRule ^\.git - [F,L]
+
+    # Domain root → app entry
+    RewriteRule ^$ web/index.php [L]
+
+    # Serve /login.php, /admin/..., /api/... from web/ without /web/ in the URL
+    RewriteCond %{REQUEST_URI} !^/web/
+    RewriteRule ^(.+)$ web/$1 [L]
+</IfModule>

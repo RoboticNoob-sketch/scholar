@@ -3,6 +3,7 @@
 *.log
 .env
 /web/config/config.local.php
+/deploy/hostinger/config.local.php
 .idea/
 .vscode/
 mobile/build/
