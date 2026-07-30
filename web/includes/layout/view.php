@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 function view(string $name, array $data = []): void
 {
-    $path = dirname(__DIR__) . '/views/' . str_replace('.', '/', $name) . '.php';
+    $path = dirname(__DIR__, 2) . '/views/' . str_replace('.', '/', $name) . '.php';
     if (!is_file($path)) {
         throw new RuntimeException('View not found: ' . $name);
     }

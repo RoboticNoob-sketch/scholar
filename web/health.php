@@ -24,7 +24,7 @@ if ($hasLocal) {
     echo '<li>database: <code>' . e($config['db']['name'] ?? '') . '</code></li>';
 
     try {
-        require_once __DIR__ . '/includes/db.php';
+        require_once __DIR__ . '/includes/core/db.php';
         $pdo = db_connect($config);
         echo '<li>MySQL connection: <span class="ok">OK</span></li>';
 

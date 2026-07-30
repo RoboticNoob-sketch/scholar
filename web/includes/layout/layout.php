@@ -26,7 +26,7 @@ function render_school_logo(string $class = 'brand-logo'): void
 function asset_url(string $path): string
 {
     $url = base_url($path);
-    $full = dirname(__DIR__) . '/' . ltrim($path, '/');
+    $full = dirname(__DIR__, 2) . '/' . ltrim($path, '/');
     if (is_file($full)) {
         $url .= '?v=' . filemtime($full);
     }

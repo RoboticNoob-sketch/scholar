@@ -33,16 +33,17 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-require_once __DIR__ . '/autoload.php';
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/view.php';
-require_once __DIR__ . '/pagination.php';
-require_once __DIR__ . '/datatables.php';
-require_once __DIR__ . '/report_templates.php';
-require_once __DIR__ . '/export.php';
-require_once __DIR__ . '/pdf_report.php';
+require_once __DIR__ . '/core/autoload.php';
+require_once __DIR__ . '/core/db.php';
+require_once __DIR__ . '/core/helpers.php';
+require_once __DIR__ . '/core/auth.php';
+require_once __DIR__ . '/layout/view.php';
+require_once __DIR__ . '/layout/layout.php';
+require_once __DIR__ . '/support/pagination.php';
+require_once __DIR__ . '/support/datatables.php';
+require_once __DIR__ . '/export/report_templates.php';
+require_once __DIR__ . '/export/export.php';
+require_once __DIR__ . '/export/pdf_report.php';
 
 try {
     $pdo = db_connect($config);

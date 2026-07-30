@@ -6,7 +6,7 @@ function app_config(): array
 {
     static $config = null;
     if ($config === null) {
-        $config = require __DIR__ . '/../config/load.php';
+        $config = require __DIR__ . '/../../config/load.php';
     }
     return $config;
 }
@@ -213,7 +213,7 @@ function sync_enrollments_for_scholar(PDO $pdo, int $scholarId, array $programId
 
 function scholar_uploads_dir(): string
 {
-    return dirname(__DIR__) . '/assets/uploads/scholars';
+    return dirname(__DIR__, 2) . '/assets/uploads/scholars';
 }
 
 function scholar_photo_url(?string $photoPath, ?int $scholarId = null): ?string
