@@ -3,12 +3,43 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  function appendFilterParams(params, selector) {
+    if (!selector) {
+      return;
+    }
+
+    const container = document.querySelector(selector);
+    if (!container) {
+      return;
+    }
+
+    if (container instanceof HTMLFormElement) {
+      new FormData(container).forEach((value, key) => {
+        if (value !== '') {
+          params[key] = value;
+        }
+      });
+      return;
+    }
+
+    container.querySelectorAll('input, select, textarea').forEach((field) => {
+      if (!field.name || field.disabled) {
+        return;
+      }
+      if ((field.type === 'checkbox' || field.type === 'radio') && !field.checked) {
+        return;
+      }
+      if (field.value !== '') {
+        params[field.name] = field.value;
+      }
+    });
+  }
+
   document.querySelectorAll('.datatable-server').forEach((table) => {
     const $table = jQuery(table);
     const ajaxUrl = table.dataset.ajaxUrl;
     const filterFormSelector = table.dataset.filterForm || '';
     const defaultOrder = JSON.parse(table.dataset.defaultOrder || '[[0, "desc"]]');
-
     const checkboxColumn = table.dataset.checkboxColumn;
 
     const dt = $table.DataTable({
@@ -17,16 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ajax: {
         url: ajaxUrl,
         data(d) {
-          if (filterFormSelector) {
-            const form = document.querySelector(filterFormSelector);
-            if (form) {
-              new FormData(form).forEach((value, key) => {
-                if (value !== '') {
-                  d[key] = value;
-                }
-              });
-            }
-          }
+          appendFilterParams(d, filterFormSelector);
         },
         error(xhr) {
           let message = 'Could not load table data.';
@@ -64,8 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (filterFormSelector) {
-      const form = document.querySelector(filterFormSelector);
-      form?.querySelectorAll('select, input').forEach((input) => {
+      const container = document.querySelector(filterFormSelector);
+      container?.querySelectorAll('select, input, textarea').forEach((input) => {
         input.addEventListener('change', () => {
           dt.ajax.reload();
         });
