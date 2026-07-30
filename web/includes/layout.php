@@ -53,13 +53,22 @@ function render_head(string $title): void
     foreach ($assets as $asset) {
         echo '  <link rel="stylesheet" href="' . e(asset_url($asset)) . "\">\n";
     }
+    if (page_uses_datatables()) {
+        echo '  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">' . "\n";
+        echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/datatables-theme.css')) . "\">\n";
+    }
     echo "</head>\n<body>\n";
 }
 
 function render_foot(): void
 {
     echo '<script src="https://unpkg.com/lucide@latest"></script>' . "\n";
-    echo '<script src="' . e(base_url('assets/js/app.js')) . '"></script>' . "\n";
+    if (page_uses_datatables()) {
+        echo '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>' . "\n";
+        echo '<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>' . "\n";
+        echo '<script src="' . e(asset_url('assets/js/admin-tables.js')) . '"></script>' . "\n";
+    }
+    echo '<script src="' . e(asset_url('assets/js/app.js')) . '"></script>' . "\n";
     echo "</body></html>\n";
 }
 

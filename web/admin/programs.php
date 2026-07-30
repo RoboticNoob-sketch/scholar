@@ -54,36 +54,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('admin/programs.php');
 }
 
-$page = pagination_page();
-$sql = 'SELECT p.*, COUNT(DISTINCT e.scholar_id) AS enrolled_count
-        FROM scholarship_programs p
-        LEFT JOIN enrollments e ON e.program_id = p.id AND e.status = "active"
-        GROUP BY p.id ORDER BY p.name';
-$result = paginate($pdo, $sql, [], $page);
-$programs = $result['rows'];
-
-render_admin_layout($pdo, 'programs', 'Programs', function () use ($programs, $result): void {
-    echo '<div class="breadcrumb">Admin / Programs</div>';
-    echo '<div class="page-header"><h1 class="page-title">Scholarship Programs</h1>';
-    echo '<a class="btn btn-primary btn-sm" href="' . base_url('admin/program-form.php') . '">ADD PROGRAM</a></div>';
-
-    echo '<div class="card table-card"><div class="table-wrap"><table class="table"><thead><tr>';
-    echo '<th>Program</th><th>Amount</th><th>Academic Year</th><th>Semester</th><th>Enrolled</th><th>Status</th><th>Actions</th>';
-    echo '</tr></thead><tbody>';
-    foreach ($programs as $p) {
-        echo '<tr>';
-        echo '<td>' . e($p['name']) . '</td>';
-        echo '<td>' . e(format_money((float) $p['amount'])) . '</td>';
-        echo '<td>' . e($p['academic_year']) . '</td>';
-        echo '<td>' . e($p['semester']) . '</td>';
-        echo '<td>' . (int) $p['enrolled_count'] . '</td>';
-        echo '<td><span class="badge ' . badge_class($p['status']) . '">' . e($p['status']) . '</span></td>';
-        echo '<td><a class="link-action" href="' . base_url('admin/program-form.php?id=' . (int) $p['id']) . '">Edit</a></td>';
-        echo '</tr>';
-    }
-    if (!$programs) {
-        echo '<tr><td colspan="7"><div class="empty-state">No programs found.</div></td></tr>';
-    }
-    echo '</tbody></table></div></div>';
-    render_table_footer('admin/programs.php', $result, 'programs');
-});
+render_admin_page($pdo, 'programs', 'Programs', 'admin/programs/index', [], ['datatables' => true]);
