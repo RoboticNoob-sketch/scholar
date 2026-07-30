@@ -161,6 +161,100 @@ function sync_vouchers_for_program(PDO $pdo, int $programId): int
     return $total;
 }
 
+function sync_enrollments_for_scholar(PDO $pdo, int $scholarId, array $programIds): int
+{
+    $pdo->prepare('UPDATE enrollments SET status="removed" WHERE scholar_id=? AND status="active"')
+        ->execute([$scholarId]);
+
+    $vouchersAdded = 0;
+    if ($programIds === []) {
+        return 0;
+    }
+
+    $insert = $pdo->prepare(
+        'INSERT INTO enrollments (scholar_id, program_id, status) VALUES (?, ?, "active")
+         ON DUPLICATE KEY UPDATE status="active"'
+    );
+    foreach ($programIds as $programId) {
+        $insert->execute([$scholarId, $programId]);
+        $vouchersAdded += sync_vouchers_for_program($pdo, $programId);
+    }
+
+    return $vouchersAdded;
+}
+
+function scholar_uploads_dir(): string
+{
+    return dirname(__DIR__) . '/assets/uploads/scholars';
+}
+
+function scholar_photo_url(?string $photoPath): ?string
+{
+    if ($photoPath === null || $photoPath === '') {
+        return null;
+    }
+
+    return base_url('assets/uploads/scholars/' . ltrim($photoPath, '/'));
+}
+
+function delete_scholar_photo_file(?string $photoPath): void
+{
+    if ($photoPath === null || $photoPath === '') {
+        return;
+    }
+
+    $path = scholar_uploads_dir() . '/' . basename($photoPath);
+    if (is_file($path)) {
+        unlink($path);
+    }
+}
+
+function handle_scholar_photo_upload(int $scholarId, ?string $currentPath, bool $removePhoto = false): ?string
+{
+    if ($removePhoto) {
+        delete_scholar_photo_file($currentPath);
+        return null;
+    }
+
+    if (!isset($_FILES['photo']) || !is_array($_FILES['photo'])) {
+        return $currentPath;
+    }
+
+    $file = $_FILES['photo'];
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return $currentPath;
+    }
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('Photo upload failed. Try a smaller JPG or PNG file.');
+    }
+    if (($file['size'] ?? 0) > 2 * 1024 * 1024) {
+        throw new RuntimeException('Photo must be 2 MB or smaller.');
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name'] ?: '') ?: '';
+    $ext = match ($mime) {
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        default => throw new RuntimeException('Photo must be JPG, PNG, or WebP.'),
+    };
+
+    $dir = scholar_uploads_dir();
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('Could not create upload folder.');
+    }
+
+    $filename = 'scholar-' . $scholarId . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+    $target = $dir . '/' . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $target)) {
+        throw new RuntimeException('Could not save uploaded photo.');
+    }
+
+    delete_scholar_photo_file($currentPath);
+    return $filename;
+}
+
 function generate_public_id(PDO $pdo): string
 {
     do {

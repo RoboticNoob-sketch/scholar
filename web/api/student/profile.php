@@ -32,6 +32,7 @@ json_response([
         'email' => $scholar['email'],
         'status' => $scholar['status'],
         'programs' => array_column($programs->fetchAll(), 'name'),
+        'photo_url' => scholar_photo_url($scholar['photo_path'] ?? null),
         'profile_qr' => profile_qr_payload($scholar),
     ],
 ]);

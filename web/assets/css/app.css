@@ -647,6 +647,170 @@ input[type="checkbox"] {
   line-height: 1.5;
 }
 
+.field-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
+.form-section {
+  padding-top: 4px;
+}
+
+.form-section + .form-section {
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--surface-elevated);
+}
+
+.form-section-head {
+  margin-bottom: 14px;
+}
+
+.form-section-head .card-title {
+  margin-bottom: 4px;
+}
+
+.form-section-head p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--surface-elevated);
+}
+
+.form-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-aside .stat-row span:first-child {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.form-aside .stat-row span:last-child {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.scholar-form-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+.photo-upload {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.photo-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--surface-elevated-alt);
+  background: var(--surface-elevated);
+}
+
+.photo-preview.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.photo-upload-fields {
+  flex: 1;
+  min-width: 220px;
+}
+
+.program-checklist {
+  display: grid;
+  gap: 8px;
+  max-height: 280px;
+  overflow: auto;
+  padding: 4px 2px;
+}
+
+.program-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--surface-elevated);
+  border-radius: var(--radius-comfortable, 8px);
+  cursor: pointer;
+  transition: border-color var(--duration-fast, 100ms) var(--ease-standard),
+    background var(--duration-fast, 100ms) var(--ease-standard);
+}
+
+.program-checklist-item:hover {
+  border-color: var(--surface-elevated-alt);
+  background: var(--surface-card-alt);
+}
+
+.program-checklist-item strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.program-checklist-item div span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.login-demo {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 12px;
+  background: var(--surface-card);
+  border-radius: var(--radius-comfortable, 8px);
+}
+
+.input-prefix-wrap {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-prefix-wrap .input-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-elevated);
+  border: 1px solid var(--surface-elevated);
+  border-right: 0;
+  border-radius: var(--radius-comfortable, 8px) 0 0 var(--radius-comfortable, 8px);
+}
+
+.input-prefix-wrap .input {
+  border-radius: 0 var(--radius-comfortable, 8px) var(--radius-comfortable, 8px) 0;
+}
+
 .login-demo {
   font-size: 11px;
   color: var(--text-tertiary);
@@ -892,7 +1056,7 @@ input[type="checkbox"] {
 
 /* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .split-grid, .detail-grid { grid-template-columns: 1fr; }
+  .split-grid, .detail-grid, .scholar-form-layout { grid-template-columns: 1fr; }
   .login-page { grid-template-columns: 1fr; }
   .login-hero { display: none; }
 }

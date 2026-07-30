@@ -22,6 +22,7 @@ CREATE TABLE scholars (
     year_level VARCHAR(40) NULL,
     email VARCHAR(120) NULL,
     phone VARCHAR(40) NULL,
+    photo_path VARCHAR(255) NULL,
     qr_token CHAR(64) NOT NULL UNIQUE,
     public_id CHAR(16) NOT NULL UNIQUE,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',

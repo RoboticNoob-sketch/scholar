@@ -60,6 +60,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final courseYear = [p?['course'], p?['year_level']].where((e) => e != null && e.toString().isNotEmpty).join(' · ');
     final programs = ((p?['programs'] as List?) ?? []).join(', ');
 
+    final photoUrl = p?['photo_url']?.toString();
+    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+
     return RefreshIndicator(
       onRefresh: _load,
       color: AppTheme.accent,
@@ -77,10 +80,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   CircleAvatar(
                     radius: 38,
                     backgroundColor: AppTheme.elevated,
-                    child: Text(
-                      initials.isEmpty ? 'SL' : initials,
-                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppTheme.accent),
-                    ),
+                    backgroundImage: hasPhoto ? NetworkImage(photoUrl!) : null,
+                    child: hasPhoto
+                        ? null
+                        : Text(
+                            initials.isEmpty ? 'SL' : initials,
+                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppTheme.accent),
+                          ),
                   ),
                   const SizedBox(height: 12),
                   Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),

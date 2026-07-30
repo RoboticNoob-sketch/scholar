@@ -39,6 +39,10 @@ render_admin_layout($pdo, 'scholars', scholar_full_name($scholar), function () u
     echo '<div class="detail-grid">';
     echo '<div class="stack">';
     echo '<div class="card"><div class="card-title">Profile</div>';
+    $photoUrl = scholar_photo_url($scholar['photo_path'] ?? null);
+    if ($photoUrl) {
+        echo '<div style="margin-bottom:16px"><img class="photo-preview" src="' . e($photoUrl) . '" alt="' . e(scholar_full_name($scholar)) . '"></div>';
+    }
     $fields = [
         'Student No.' => $scholar['student_no'],
         'Course & Year' => trim(($scholar['course'] ?? '') . ', ' . ($scholar['year_level'] ?? ''), ', '),

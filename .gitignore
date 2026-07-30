@@ -4,6 +4,9 @@
 .env
 /web/config/config.local.php
 /deploy/hostinger/config.local.php
+/web/assets/uploads/scholars/*
+!/web/assets/uploads/scholars/.gitkeep
+!/web/assets/uploads/scholars/.htaccess
 .idea/
 .vscode/
 mobile/build/
