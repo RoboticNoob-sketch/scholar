@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_card.dart';
 import '../widgets/page_header.dart';
 import '../widgets/school_logo.dart';
+import '../widgets/scholar_avatar.dart';
 import '../widgets/status_badge.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -61,7 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final programs = ((p?['programs'] as List?) ?? []).join(', ');
 
     final photoUrl = p?['photo_url']?.toString();
-    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
 
     return RefreshIndicator(
       onRefresh: _load,
@@ -77,16 +77,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               accentTop: AppTheme.accent,
               child: Column(
                 children: [
-                  CircleAvatar(
+                  ScholarAvatar(
+                    photoUrl: photoUrl,
+                    initials: initials,
                     radius: 38,
-                    backgroundColor: AppTheme.elevated,
-                    backgroundImage: hasPhoto ? NetworkImage(photoUrl!) : null,
-                    child: hasPhoto
-                        ? null
-                        : Text(
-                            initials.isEmpty ? 'SL' : initials,
-                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppTheme.accent),
-                          ),
                   ),
                   const SizedBox(height: 12),
                   Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),

@@ -43,9 +43,14 @@ render_admin_layout($pdo, 'scholars', scholar_full_name($scholar), function () u
     $photoFile = ($scholar['photo_path'] ?? '') !== ''
         ? scholar_uploads_dir() . '/' . basename((string) $scholar['photo_path'])
         : null;
+    echo '<div class="scholar-profile-head">';
     if ($photoUrl) {
-        echo '<div style="margin-bottom:16px"><img class="photo-preview" src="' . e($photoUrl) . '" alt="' . e(scholar_full_name($scholar)) . '" onerror="this.style.display=\'none\'"></div>';
+        echo '<div class="scholar-avatar-wrap"><img class="photo-preview scholar-avatar" src="' . e($photoUrl) . '" alt="' . e(scholar_full_name($scholar)) . '" width="96" height="96" onerror="this.closest(\'.scholar-avatar-wrap\')?.remove()"></div>';
     }
+    echo '<div class="scholar-profile-meta">';
+    echo '<div class="scholar-profile-name">' . e(scholar_full_name($scholar)) . '</div>';
+    echo '<span class="badge ' . badge_class($scholar['status']) . '">' . e($scholar['status']) . '</span>';
+    echo '</div></div>';
     if ($photoFile && !is_file($photoFile)) {
         echo '<div class="alert-error" style="margin-bottom:16px"><i data-lucide="alert-circle"></i><span>Photo file missing on server. Edit scholar and upload the photo again.</span></div>';
     }
@@ -54,7 +59,6 @@ render_admin_layout($pdo, 'scholars', scholar_full_name($scholar), function () u
         'Course & Year' => trim(($scholar['course'] ?? '') . ', ' . ($scholar['year_level'] ?? ''), ', '),
         'Contact' => $scholar['email'] ?: '—',
         'Phone' => $scholar['phone'] ?: '—',
-        'Status' => $scholar['status'],
     ];
     foreach ($fields as $label => $value) {
         echo '<div class="stat-row"><span>' . e($label) . '</span><span>' . e($value) . '</span></div>';

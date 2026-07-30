@@ -9,6 +9,7 @@ import '../../utils/qr_payload.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/page_header.dart';
+import '../../widgets/scholar_avatar.dart';
 import '../../widgets/segment_tabs.dart';
 
 enum ScanMode { voucher, profile }
@@ -49,6 +50,7 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
   List<dynamic> _recent = [];
   String? _verificationToken;
   String? _verifiedScholarName;
+  String? _verifiedScholarPhoto;
 
   @override
   void initState() {
@@ -178,6 +180,7 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
             _resultDetail = '${scholar?['name']} · ${scholar?['student_no']} · ${res['amount']}';
             _verificationToken = null;
             _verifiedScholarName = null;
+            _verifiedScholarPhoto = null;
           });
           _loadRecent();
         } else {
@@ -196,6 +199,7 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
             if (clearVerify) {
               _verificationToken = null;
               _verifiedScholarName = null;
+              _verifiedScholarPhoto = null;
             }
           });
         }
@@ -210,6 +214,7 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
             _resultDetail = '${scholar?['name']} · ${scholar?['student_no']}';
             _verificationToken = res['verification_token']?.toString();
             _verifiedScholarName = scholar?['name']?.toString();
+            _verifiedScholarPhoto = scholar?['photo_url']?.toString();
             _mode = ScanMode.voucher;
           });
         } else {
@@ -223,6 +228,7 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
                 : 'Ask the scholar to open My QR → Profile tab and pull down to refresh.';
             _verificationToken = null;
             _verifiedScholarName = null;
+            _verifiedScholarPhoto = null;
           });
         }
       }
@@ -339,7 +345,17 @@ class _StaffScannerScreenState extends State<StaffScannerScreen> with WidgetsBin
                   accentTop: AppTheme.accent,
                   child: Row(
                     children: [
-                      const Icon(Icons.verified_user_outlined, color: AppTheme.accent, size: 20),
+                      ScholarAvatar(
+                        photoUrl: _verifiedScholarPhoto,
+                        initials: (_verifiedScholarName ?? '?')
+                            .split(' ')
+                            .where((e) => e.isNotEmpty)
+                            .map((e) => e[0])
+                            .take(2)
+                            .join()
+                            .toUpperCase(),
+                        radius: 22,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(

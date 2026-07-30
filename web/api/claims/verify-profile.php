@@ -62,5 +62,6 @@ json_response([
         'name' => scholar_full_name($scholar),
         'student_no' => $scholar['student_no'],
         'public_id' => $scholar['public_id'],
+        'photo_url' => scholar_photo_url($scholar['photo_path'] ?? null, (int) $scholar['id']),
     ],
 ]);

@@ -23,6 +23,16 @@ function render_school_logo(string $class = 'brand-logo'): void
     echo '<img class="' . e($class) . '" src="' . e(school_logo_url()) . '" alt="SLSU Tiaong logo">';
 }
 
+function asset_url(string $path): string
+{
+    $url = base_url($path);
+    $full = dirname(__DIR__) . '/' . ltrim($path, '/');
+    if (is_file($full)) {
+        $url .= '?v=' . filemtime($full);
+    }
+    return $url;
+}
+
 function render_head(string $title): void
 {
     $app = e(app_config()['app_name']);
@@ -41,7 +51,7 @@ function render_head(string $title): void
     echo '  <link rel="icon" type="image/png" href="' . e(school_logo_url()) . '">' . "\n";
     echo "  <title>{$title} · {$app}</title>\n";
     foreach ($assets as $asset) {
-        echo '  <link rel="stylesheet" href="' . e(base_url($asset)) . "\">\n";
+        echo '  <link rel="stylesheet" href="' . e(asset_url($asset)) . "\">\n";
     }
     echo "</head>\n<body>\n";
 }

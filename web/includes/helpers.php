@@ -18,6 +18,34 @@ function base_url(string $path = ''): string
     return $path === '' ? $base : $base . '/' . $path;
 }
 
+function absolute_url(string $path = ''): string
+{
+    $configured = app_config()['base_url'];
+    $path = ltrim($path, '/');
+
+    if ($configured !== '' && preg_match('#^https?://#i', $configured)) {
+        $base = rtrim($configured, '/');
+        return $path === '' ? $base : $base . '/' . $path;
+    }
+
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $prefix = rtrim((string) $configured, '/');
+    if ($prefix !== '' && $prefix[0] !== '/') {
+        $prefix = '/' . $prefix;
+    }
+
+    if ($path === '') {
+        return $scheme . '://' . $host . $prefix;
+    }
+
+    if ($prefix === '') {
+        return $scheme . '://' . $host . '/' . $path;
+    }
+
+    return $scheme . '://' . $host . $prefix . '/' . $path;
+}
+
 function redirect(string $path): never
 {
     header('Location: ' . base_url($path));
@@ -195,10 +223,10 @@ function scholar_photo_url(?string $photoPath, ?int $scholarId = null): ?string
     }
 
     if ($scholarId !== null && $scholarId > 0) {
-        return base_url('scholar-photo.php?id=' . $scholarId);
+        return absolute_url('scholar-photo.php?id=' . $scholarId);
     }
 
-    return base_url('assets/uploads/scholars/' . basename($photoPath));
+    return absolute_url('assets/uploads/scholars/' . basename($photoPath));
 }
 
 function delete_scholar_photo_file(?string $photoPath): void

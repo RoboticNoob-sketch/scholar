@@ -38,6 +38,7 @@ if ($user['role'] === 'student') {
             'course' => $profile['course'],
             'year_level' => $profile['year_level'],
             'email' => $profile['email'],
+            'photo_url' => scholar_photo_url($profile['photo_path'] ?? null, (int) $profile['id']),
         ];
     }
 }

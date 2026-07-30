@@ -209,7 +209,7 @@ render_admin_layout($pdo, 'scholars', $pageTitle, function () use (
     echo '</div></div>';
 
     echo '<div class="scholar-form-layout">';
-    echo '<form method="post" enctype="multipart/form-data" class="card form-grid form-wide">';
+    echo '<form method="post" enctype="multipart/form-data" class="card form-grid scholar-form-card">';
     if ($isEdit) {
         echo '<input type="hidden" name="id" value="' . (int) $scholar['id'] . '">';
     }
@@ -218,11 +218,13 @@ render_admin_layout($pdo, 'scholars', $pageTitle, function () use (
     echo '<div class="form-section-head"><div class="card-title"><i data-lucide="id-card"></i> Student identity</div>';
     echo '<p>Official records used on vouchers, reports, and the mobile app.</p></div>';
     echo '<div class="photo-upload">';
+    echo '<div class="scholar-avatar-wrap">';
     if ($photoUrl) {
-        echo '<img class="photo-preview" id="photoPreview" src="' . e($photoUrl) . '" alt="Scholar photo">';
+        echo '<img class="photo-preview scholar-avatar" id="photoPreview" src="' . e($photoUrl) . '" alt="Scholar photo" width="96" height="96">';
     } else {
-        echo '<div class="photo-preview placeholder" id="photoPreview">' . e($initials !== '' ? $initials : '?') . '</div>';
+        echo '<div class="photo-preview placeholder scholar-avatar" id="photoPreview">' . e($initials !== '' ? $initials : '?') . '</div>';
     }
+    echo '</div>';
     echo '<div class="photo-upload-fields">';
     echo '<label class="field-label" for="photo">Profile photo</label>';
     echo '<input class="input" id="photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp">';
@@ -355,7 +357,9 @@ render_admin_layout($pdo, 'scholars', $pageTitle, function () use (
     echo '    else {';
     echo '      const img = document.createElement("img");';
     echo '      img.id = "photoPreview";';
-    echo '      img.className = "photo-preview";';
+    echo '      img.className = "photo-preview scholar-avatar";';
+    echo '      img.width = 96;';
+    echo '      img.height = 96;';
     echo '      img.alt = "Scholar photo preview";';
     echo '      img.src = reader.result;';
     echo '      preview.replaceWith(img);';

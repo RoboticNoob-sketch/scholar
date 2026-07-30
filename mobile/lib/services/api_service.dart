@@ -59,6 +59,18 @@ class ApiService {
     return baseForHost(_hosts.first);
   }
 
+  /// Resolves API photo paths to a full URL the image loader can fetch.
+  static String? resolveMediaUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return null;
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final base = baseUrl.replaceAll(RegExp(r'/+$'), '');
+    final path = trimmed.replaceFirst(RegExp(r'^/+'), '');
+    return '$base/$path';
+  }
+
   static Map<String, String> get _headers => {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
