@@ -89,6 +89,58 @@ function generate_voucher_code(): string
     return 'VCH-' . strtoupper(substr(generate_token(8), 0, 4)) . '-' . strtoupper(substr(generate_token(8), 0, 4));
 }
 
+function generate_missing_vouchers_for_batch(PDO $pdo, int $batchId): int
+{
+    $batch = $pdo->prepare('SELECT * FROM distribution_batches WHERE id = ?');
+    $batch->execute([$batchId]);
+    $batchRow = $batch->fetch();
+    if (!$batchRow || $batchRow['status'] === 'closed') {
+        return 0;
+    }
+
+    $stmt = $pdo->prepare(
+        'SELECT e.scholar_id, p.amount FROM enrollments e
+         JOIN scholarship_programs p ON p.id = e.program_id
+         WHERE e.program_id = ? AND e.status = "active"
+         AND NOT EXISTS (SELECT 1 FROM claim_vouchers v WHERE v.batch_id = ? AND v.scholar_id = e.scholar_id)'
+    );
+    $stmt->execute([(int) $batchRow['program_id'], $batchId]);
+
+    $insert = $pdo->prepare(
+        'INSERT INTO claim_vouchers (batch_id, scholar_id, voucher_code, amount, status, expires_at)
+         VALUES (?, ?, ?, ?, "pending", DATE_ADD(?, INTERVAL 180 DAY))'
+    );
+
+    $count = 0;
+    foreach ($stmt->fetchAll() as $row) {
+        $insert->execute([
+            $batchId,
+            $row['scholar_id'],
+            generate_voucher_code(),
+            $row['amount'],
+            $batchRow['distribution_date'],
+        ]);
+        $count++;
+    }
+
+    return $count;
+}
+
+function sync_vouchers_for_program(PDO $pdo, int $programId): int
+{
+    $batches = $pdo->prepare(
+        'SELECT id FROM distribution_batches WHERE program_id = ? AND status IN ("draft", "open")'
+    );
+    $batches->execute([$programId]);
+
+    $total = 0;
+    foreach ($batches->fetchAll() as $batch) {
+        $total += generate_missing_vouchers_for_batch($pdo, (int) $batch['id']);
+    }
+
+    return $total;
+}
+
 function generate_public_id(PDO $pdo): string
 {
     do {

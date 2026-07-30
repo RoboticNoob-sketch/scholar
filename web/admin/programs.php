@@ -20,13 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare(
             'UPDATE scholarship_programs SET name=?, description=?, amount=?, academic_year=?, semester=?, status=? WHERE id=?'
         )->execute([$name, $description, $amount, $academicYear, $semester, $status, $id]);
-        flash('success', 'Program updated.');
+        $message = 'Program updated.';
     } else {
         $pdo->prepare(
             'INSERT INTO scholarship_programs (name, description, amount, academic_year, semester, status) VALUES (?,?,?,?,?,?)'
         )->execute([$name, $description, $amount, $academicYear, $semester, $status]);
         $id = (int) $pdo->lastInsertId();
-        flash('success', 'Program created.');
+        $message = 'Program created.';
     }
 
     if ($id > 0) {
@@ -43,6 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($id > 0) {
+        $voucherCount = sync_vouchers_for_program($pdo, $id);
+        if ($voucherCount > 0) {
+            $message .= " $voucherCount voucher(s) added to open distribution batch(es).";
+        }
+    }
+
+    flash('success', $message);
     redirect('admin/programs.php');
 }
 

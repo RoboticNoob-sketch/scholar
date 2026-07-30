@@ -11,36 +11,19 @@ $id = (int) ($_GET['id'] ?? 0);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     if ($action === 'open') {
+        $count = generate_missing_vouchers_for_batch($pdo, $id);
         $pdo->prepare('UPDATE distribution_batches SET status="open" WHERE id=?')->execute([$id]);
         audit_log($pdo, (int) $user['id'], 'batch_opened', 'distribution_batch', $id, 'Batch opened');
-        flash('success', 'Batch opened for distribution.');
+        flash('success', $count > 0
+            ? "Batch opened. $count voucher(s) generated for newly enrolled scholars."
+            : 'Batch opened for distribution.');
     } elseif ($action === 'close') {
         $pdo->prepare('UPDATE distribution_batches SET status="closed" WHERE id=?')->execute([$id]);
         audit_log($pdo, (int) $user['id'], 'batch_closed', 'distribution_batch', $id, 'Batch closed');
         flash('success', 'Batch closed.');
     } elseif ($action === 'generate') {
-        $batch = $pdo->prepare('SELECT * FROM distribution_batches WHERE id=?');
-        $batch->execute([$id]);
-        $batchRow = $batch->fetch();
-        if ($batchRow) {
-            $stmt = $pdo->prepare(
-                'SELECT e.scholar_id, p.amount FROM enrollments e
-                 JOIN scholarship_programs p ON p.id = e.program_id
-                 WHERE e.program_id = ? AND e.status = "active"
-                 AND NOT EXISTS (SELECT 1 FROM claim_vouchers v WHERE v.batch_id = ? AND v.scholar_id = e.scholar_id)'
-            );
-            $stmt->execute([$batchRow['program_id'], $id]);
-            $insert = $pdo->prepare(
-                'INSERT INTO claim_vouchers (batch_id, scholar_id, voucher_code, amount, status, expires_at)
-                 VALUES (?, ?, ?, ?, "pending", DATE_ADD(?, INTERVAL 180 DAY))'
-            );
-            $count = 0;
-            foreach ($stmt->fetchAll() as $row) {
-                $insert->execute([$id, $row['scholar_id'], generate_voucher_code(), $row['amount'], $batchRow['distribution_date']]);
-                $count++;
-            }
-            flash('success', "$count vouchers generated.");
-        }
+        $count = generate_missing_vouchers_for_batch($pdo, $id);
+        flash('success', $count > 0 ? "$count vouchers generated." : 'All enrolled scholars already have vouchers.');
     } elseif ($action === 'void') {
         if (empty($_POST['voucher_ids'])) {
             flash('error', 'Select at least one pending voucher to void.');
@@ -96,6 +79,8 @@ render_admin_layout($pdo, 'batches', $batch['name'], function () use ($batch, $c
     echo '<span class="badge ' . badge_class($batch['status']) . '">' . e($batch['status']) . '</span>';
     if ($batch['status'] === 'draft') {
         echo '<form method="post"><input type="hidden" name="action" value="open"><button class="btn btn-primary btn-sm" type="submit">OPEN BATCH</button></form>';
+    }
+    if ($batch['status'] === 'draft' || $batch['status'] === 'open') {
         echo '<form method="post"><input type="hidden" name="action" value="generate"><button class="btn btn-outline btn-sm" type="submit">GENERATE VOUCHERS</button></form>';
     }
     if ($batch['status'] === 'open') {

@@ -21,21 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $batchId = (int) $pdo->lastInsertId();
 
     if ($generate) {
-        $stmt = $pdo->prepare(
-            'SELECT e.scholar_id, p.amount FROM enrollments e
-             JOIN scholarship_programs p ON p.id = e.program_id
-             WHERE e.program_id = ? AND e.status = "active"'
-        );
-        $stmt->execute([$programId]);
-        $enrolled = $stmt->fetchAll();
-        $insert = $pdo->prepare(
-            'INSERT INTO claim_vouchers (batch_id, scholar_id, voucher_code, amount, status, expires_at)
-             VALUES (?, ?, ?, ?, "pending", DATE_ADD(?, INTERVAL 180 DAY))'
-        );
-        foreach ($enrolled as $row) {
-            $insert->execute([$batchId, $row['scholar_id'], generate_voucher_code(), $row['amount'], $date]);
-        }
-        audit_log($pdo, (int) $user['id'], 'vouchers_generated', 'distribution_batch', $batchId, count($enrolled) . ' vouchers generated');
+        $count = generate_missing_vouchers_for_batch($pdo, $batchId);
+        audit_log($pdo, (int) $user['id'], 'vouchers_generated', 'distribution_batch', $batchId, "$count vouchers generated");
     }
 
     flash('success', 'Batch created. Open the batch when ready so scholars see vouchers on mobile.');
