@@ -10,8 +10,8 @@ final class ReportQueries
 {
     public static function datatables(PDO $pdo, array $input, int $batchId = 0): array
     {
-        $query = claims_report_sql($batchId);
-        $sql = preg_replace('/\s+ORDER BY .+$/i', '', $query['sql']);
+        $query = claims_report_base_sql($batchId);
+        $sql = $query['sql'];
         $params = $query['params'];
 
         if ($input['search'] !== '') {

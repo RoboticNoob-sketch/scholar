@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 function claims_report_sql(int $batchId = 0): array
 {
+    $query = claims_report_base_sql($batchId);
+    $query['sql'] .= ' ORDER BY c.claimed_at DESC';
+
+    return $query;
+}
+
+function claims_report_base_sql(int $batchId = 0): array
+{
     $sql = 'SELECT c.claimed_at, v.amount, v.voucher_code, v.status, b.name AS batch_name, p.name AS program_name,
                    s.student_no, s.first_name, s.last_name, u.username AS staff_name
             FROM claims c
@@ -18,7 +26,6 @@ function claims_report_sql(int $batchId = 0): array
         $sql .= ' AND b.id = ?';
         $params[] = $batchId;
     }
-    $sql .= ' ORDER BY c.claimed_at DESC';
 
     return ['sql' => $sql, 'params' => $params];
 }

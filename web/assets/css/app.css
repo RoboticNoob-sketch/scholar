@@ -545,6 +545,201 @@ input[type="checkbox"] {
 
 .kpi-card .delta-muted { color: var(--text-secondary); }
 
+/* ── Dashboard ────────────────────────────────────────── */
+.dashboard-header .page-subtitle {
+  margin-top: 4px;
+}
+
+.dashboard-split {
+  margin-top: 4px;
+}
+
+.dashboard-activity {
+  margin-top: 16px;
+}
+
+.dashboard-panel .card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dashboard-panel .card-title-row .card-title {
+  margin: 0;
+}
+
+.card-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.kpi-card-link {
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--duration-fast, 100ms) var(--ease-standard),
+    border-color var(--duration-fast, 100ms) var(--ease-standard);
+}
+
+.kpi-card-link:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.batch-progress-list {
+  display: grid;
+  gap: 12px;
+}
+
+.batch-progress-card {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--surface-elevated-alt);
+  border-radius: var(--radius-comfortable, 8px);
+  background: var(--surface-elevated);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--duration-fast, 100ms) var(--ease-standard),
+    background var(--duration-fast, 100ms) var(--ease-standard),
+    transform var(--duration-fast, 100ms) var(--ease-standard);
+}
+
+.batch-progress-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-card-alt);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.batch-progress-card.is-complete {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--surface-elevated-alt));
+}
+
+.batch-progress-card.is-complete .batch-progress-pct {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.batch-progress-card.is-complete .progress-fill {
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 75%, #fff));
+}
+
+.batch-progress-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.batch-progress-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.batch-progress-name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.batch-progress-program,
+.batch-progress-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.batch-progress-program svg,
+.batch-progress-date svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.batch-progress-pct {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--font-title, 'Work Sans', sans-serif);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  line-height: 1;
+}
+
+.progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-page);
+  border: 1px solid var(--surface-elevated-alt);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #fff));
+  transition: width 400ms var(--ease-standard);
+}
+
+.batch-progress-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
+}
+
+.batch-stat {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.batch-stat strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.batch-stat-claimed strong { color: var(--accent); }
+
+.batch-stat-pending strong { color: var(--text-warning); }
+
+.batch-progress-action {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-announcement);
+}
+
+.batch-progress-action svg {
+  width: 12px;
+  height: 12px;
+}
+
+.batch-progress-card:hover .batch-progress-action {
+  color: var(--accent);
+}
+
 /* ── Split layout ─────────────────────────────────────── */
 .split-grid {
   display: grid;

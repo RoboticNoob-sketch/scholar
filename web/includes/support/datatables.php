@@ -19,12 +19,34 @@ function datatables_input(): array
 function datatables_json(int $draw, int $total, int $filtered, array $data): never
 {
     header('Content-Type: application/json; charset=utf-8');
+    $flags = JSON_THROW_ON_ERROR;
+    if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+        $flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+    }
     echo json_encode([
         'draw' => $draw,
         'recordsTotal' => $total,
         'recordsFiltered' => $filtered,
         'data' => $data,
-    ], JSON_THROW_ON_ERROR);
+    ], $flags);
+    exit;
+}
+
+function datatables_error(int $draw, string $message, int $status = 500): never
+{
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code($status);
+    $flags = JSON_THROW_ON_ERROR;
+    if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+        $flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+    }
+    echo json_encode([
+        'draw' => $draw,
+        'recordsTotal' => 0,
+        'recordsFiltered' => 0,
+        'data' => [],
+        'error' => $message,
+    ], $flags);
     exit;
 }
 
@@ -58,6 +80,13 @@ function datatables_order_clause(array $columnMap, int $columnIndex, string $dir
 
 function require_admin_datatables(PDO $pdo): array
 {
-    require_role($pdo, ['admin']);
-    return datatables_input();
+    $input = datatables_input();
+    $user = current_user($pdo);
+    if (!$user) {
+        datatables_error($input['draw'], 'Session expired. Please sign in again.', 401);
+    }
+    if (!in_array($user['role'], ['admin'], true)) {
+        datatables_error($input['draw'], 'Forbidden', 403);
+    }
+    return $input;
 }

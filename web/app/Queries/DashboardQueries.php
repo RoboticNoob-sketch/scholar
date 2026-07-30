@@ -39,7 +39,7 @@ final class DashboardQueries
     public static function openBatchProgress(PDO $pdo): array
     {
         $stmt = $pdo->query(
-            'SELECT b.id, b.name, p.name AS program_name,
+            'SELECT b.id, b.name, b.distribution_date, p.name AS program_name,
                     SUM(CASE WHEN v.status = "claimed" THEN 1 ELSE 0 END) AS claimed,
                     SUM(CASE WHEN v.status = "pending" THEN 1 ELSE 0 END) AS pending,
                     COUNT(v.id) AS total
@@ -47,7 +47,7 @@ final class DashboardQueries
              JOIN scholarship_programs p ON p.id = b.program_id
              LEFT JOIN claim_vouchers v ON v.batch_id = b.id
              WHERE b.status = "open"
-             GROUP BY b.id, b.name, p.name
+             GROUP BY b.id, b.name, b.distribution_date, p.name
              ORDER BY b.distribution_date DESC'
         );
 

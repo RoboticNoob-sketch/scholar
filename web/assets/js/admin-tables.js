@@ -28,6 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
         },
+        error(xhr) {
+          let message = 'Could not load table data.';
+          try {
+            const payload = JSON.parse(xhr.responseText || '{}');
+            if (payload.error) {
+              message = payload.error;
+            }
+          } catch (err) {
+            if (xhr.status === 401) {
+              message = 'Session expired. Please sign in again.';
+            }
+          }
+          window.alert(message);
+        },
       },
       order: defaultOrder,
       pageLength: 25,
