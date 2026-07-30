@@ -39,9 +39,15 @@ render_admin_layout($pdo, 'scholars', scholar_full_name($scholar), function () u
     echo '<div class="detail-grid">';
     echo '<div class="stack">';
     echo '<div class="card"><div class="card-title">Profile</div>';
-    $photoUrl = scholar_photo_url($scholar['photo_path'] ?? null);
+    $photoUrl = scholar_photo_url($scholar['photo_path'] ?? null, (int) $scholar['id']);
+    $photoFile = ($scholar['photo_path'] ?? '') !== ''
+        ? scholar_uploads_dir() . '/' . basename((string) $scholar['photo_path'])
+        : null;
     if ($photoUrl) {
-        echo '<div style="margin-bottom:16px"><img class="photo-preview" src="' . e($photoUrl) . '" alt="' . e(scholar_full_name($scholar)) . '"></div>';
+        echo '<div style="margin-bottom:16px"><img class="photo-preview" src="' . e($photoUrl) . '" alt="' . e(scholar_full_name($scholar)) . '" onerror="this.style.display=\'none\'"></div>';
+    }
+    if ($photoFile && !is_file($photoFile)) {
+        echo '<div class="alert-error" style="margin-bottom:16px"><i data-lucide="alert-circle"></i><span>Photo file missing on server. Edit scholar and upload the photo again.</span></div>';
     }
     $fields = [
         'Student No.' => $scholar['student_no'],

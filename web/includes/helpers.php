@@ -188,13 +188,17 @@ function scholar_uploads_dir(): string
     return dirname(__DIR__) . '/assets/uploads/scholars';
 }
 
-function scholar_photo_url(?string $photoPath): ?string
+function scholar_photo_url(?string $photoPath, ?int $scholarId = null): ?string
 {
     if ($photoPath === null || $photoPath === '') {
         return null;
     }
 
-    return base_url('assets/uploads/scholars/' . ltrim($photoPath, '/'));
+    if ($scholarId !== null && $scholarId > 0) {
+        return base_url('scholar-photo.php?id=' . $scholarId);
+    }
+
+    return base_url('assets/uploads/scholars/' . basename($photoPath));
 }
 
 function delete_scholar_photo_file(?string $photoPath): void
@@ -243,6 +247,9 @@ function handle_scholar_photo_upload(int $scholarId, ?string $currentPath, bool 
     $dir = scholar_uploads_dir();
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
         throw new RuntimeException('Could not create upload folder.');
+    }
+    if (!is_writable($dir)) {
+        throw new RuntimeException('Upload folder is not writable. Set permissions on web/assets/uploads/scholars/.');
     }
 
     $filename = 'scholar-' . $scholarId . '-' . bin2hex(random_bytes(4)) . '.' . $ext;

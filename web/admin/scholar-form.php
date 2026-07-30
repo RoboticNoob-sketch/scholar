@@ -179,7 +179,7 @@ $defaults = [
     'phone' => $scholar['phone'] ?? '',
     'status' => $scholar['status'] ?? 'active',
 ];
-$photoUrl = scholar_photo_url($scholar['photo_path'] ?? null);
+$photoUrl = $isEdit ? scholar_photo_url($scholar['photo_path'] ?? null, (int) $scholar['id']) : null;
 $initials = strtoupper(substr($defaults['first_name'], 0, 1) . substr($defaults['last_name'], 0, 1));
 $yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Graduate'];
 $courses = scholar_course_options();
