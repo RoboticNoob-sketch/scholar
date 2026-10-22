@@ -1,20 +1,23 @@
-<div class="breadcrumb">Admin / Dashboard</div>
+<div class="breadcrumb">Admin / Overview</div>
 <div class="page-header dashboard-header">
   <div>
-    <h1 class="page-title">Dashboard</h1>
-    <p class="page-subtitle">Scholarship distribution overview for <?= e(format_date(date('Y-m-d'))) ?></p>
+    <div class="dashboard-eyebrow">Scholarship operations</div>
+    <h1 class="page-title">Overview</h1>
+    <p class="page-subtitle">Distribution status and claim activity · <?= e(format_date(date('Y-m-d'))) ?></p>
   </div>
   <div class="table-actions btn-group">
-    <a class="btn btn-outline btn-sm" href="<?= e(base_url('admin/reports.php')) ?>">VIEW REPORTS</a>
-    <a class="btn btn-outline btn-sm" href="<?= e(base_url('admin/export-report.php')) ?>">EXPORT CSV</a>
-    <a class="btn btn-primary btn-sm" href="<?= e(base_url('admin/batch-form.php')) ?>">CREATE BATCH</a>
+    <a class="btn btn-outline btn-sm" href="<?= e(base_url('admin/reports.php')) ?>"><i data-lucide="chart-no-axes-column-increasing"></i> Reports</a>
+    <a class="btn btn-primary btn-sm" href="<?= e(base_url('admin/batch-form.php')) ?>"><i data-lucide="plus"></i> Create batch</a>
   </div>
 </div>
 
 <div class="kpi-grid dashboard-kpi">
   <?php foreach ($kpis as $kpi): ?>
     <a class="card kpi-card kpi-card-link<?= !empty($kpi['tone']) ? ' ' . e($kpi['tone']) : '' ?>" href="<?= e(base_url($kpi['href'])) ?>">
-      <div class="label"><?= e($kpi['label']) ?></div>
+      <div class="kpi-head">
+        <div class="label"><?= e($kpi['label']) ?></div>
+        <span class="kpi-icon"><i data-lucide="<?= e($kpi['icon'] ?? 'activity') ?>"></i></span>
+      </div>
       <div class="value"><?= e($kpi['value']) ?></div>
       <div class="delta<?= !empty($kpi['muted']) ? ' delta-muted' : '' ?>"><?= e($kpi['hint']) ?></div>
     </a>
@@ -83,24 +86,40 @@
     <?php endif; ?>
   </div>
 
-  <div class="card dashboard-panel">
+  <div class="card dashboard-panel dashboard-grid-panel">
     <div class="card-title-row">
-      <div class="card-title"><i data-lucide="receipt"></i> Recent claims</div>
+      <div>
+        <div class="panel-eyebrow">Claim ledger</div>
+        <div class="card-title"><i data-lucide="receipt"></i> Recent claims</div>
+      </div>
+      <span class="grid-live">Latest activity</span>
     </div>
     <?php if (!$recentClaims): ?>
       <div class="empty-state">No claims recorded yet.</div>
     <?php else: ?>
-      <?php foreach ($recentClaims as $claim): ?>
-        <div class="activity-item">
-          <div class="activity-top">
-            <span class="activity-who"><?= e(scholar_full_name($claim)) ?></span>
-            <span class="badge badge-accent"><?= e(format_money((float) $claim['amount'])) ?></span>
-          </div>
-          <div class="activity-meta">
-            <?= e($claim['batch_name']) ?> · <?= e($claim['staff_name']) ?> · <?= e(format_datetime($claim['claimed_at'])) ?>
-          </div>
-        </div>
-      <?php endforeach; ?>
+      <div class="table-wrap">
+        <table id="dashboard-claims" class="table dashboard-claims-table datatable-client" data-default-order="[[3, &quot;desc&quot;]]" data-page-length="5" data-export-name="recent-claims">
+          <thead>
+            <tr><th>Scholar</th><th>Distribution</th><th>Amount</th><th>Claimed at</th></tr>
+          </thead>
+          <tbody>
+            <?php foreach ($recentClaims as $claim): ?>
+              <tr>
+                <td>
+                  <span class="grid-scholar-name"><?= e(scholar_full_name($claim)) ?></span>
+                  <span class="grid-scholar-meta"><?= e($claim['student_no']) ?></span>
+                </td>
+                <td>
+                  <span class="grid-cell-main"><?= e($claim['batch_name']) ?></span>
+                  <span class="grid-cell-sub">Handled by <?= e($claim['staff_name']) ?></span>
+                </td>
+                <td data-order="<?= e((string) $claim['amount']) ?>"><span class="grid-amount"><?= e(format_money((float) $claim['amount'])) ?></span></td>
+                <td data-order="<?= e((string) strtotime($claim['claimed_at'])) ?>"><span class="grid-time"><?= e(format_datetime($claim['claimed_at'])) ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
     <?php endif; ?>
   </div>
 </div>

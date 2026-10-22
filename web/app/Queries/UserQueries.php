@@ -28,7 +28,7 @@ final class UserQueries
             $where .= ' AND u.username LIKE ?';
             $params[] = '%' . $search . '%';
         }
-        if (in_array($role, ['admin', 'staff', 'student'], true)) {
+        if (in_array($role, ['admin', 'approver', 'staff', 'student'], true)) {
             $where .= ' AND u.role = ?';
             $params[] = $role;
         }
@@ -46,7 +46,7 @@ final class UserQueries
             'SELECT role, status, COUNT(*) AS cnt FROM users GROUP BY role, status'
         )->fetchAll();
 
-        $stats = ['total' => 0, 'active' => 0, 'admin' => 0, 'staff' => 0, 'student' => 0];
+        $stats = ['total' => 0, 'active' => 0, 'admin' => 0, 'approver' => 0, 'staff' => 0, 'student' => 0];
         foreach ($counts as $row) {
             $stats['total'] += (int) $row['cnt'];
             if ($row['status'] === 'active') {

@@ -26,10 +26,22 @@ try {
         if ($allowSelect && $row['status'] === 'pending') {
             $checkbox = '<input type="checkbox" name="voucher_ids[]" value="' . (int) $row['id'] . '">';
         }
+        $voucherCode = (string) $row['voucher_code'];
+        $scholarName = scholar_full_name($row);
+        $voucherCell = '<div class="voucher-code-cell">'
+            . '<code class="voucher-code-value">' . e($voucherCode) . '</code>'
+            . '<button type="button" class="voucher-preview-trigger"'
+            . ' data-voucher-code="' . e($voucherCode) . '"'
+            . ' data-voucher-name="' . e($scholarName) . '"'
+            . ' data-voucher-student-no="' . e($row['student_no']) . '"'
+            . ' data-voucher-amount="' . e(format_money((float) $row['amount'])) . '"'
+            . ' aria-label="Preview voucher for ' . e($scholarName) . '">View QR</button>'
+            . '</div>';
         $data[] = [
             $checkbox,
-            e(scholar_full_name($row)),
+            e($scholarName),
             e($row['student_no']),
+            $voucherCell,
             e(format_money((float) $row['amount'])),
             '<span class="badge ' . e(badge_class($row['status'])) . '">' . e($row['status']) . '</span>',
             e(format_datetime($row['claimed_at'] ?? null)),

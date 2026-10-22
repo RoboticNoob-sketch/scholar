@@ -107,6 +107,37 @@ function voucher_qr_payload(string $voucherCode): string
     return 'VCH|' . trim($voucherCode);
 }
 
+function csrf_token(): string
+{
+    if (empty($_SESSION['_csrf_token'])) {
+        $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return (string) $_SESSION['_csrf_token'];
+}
+
+function csrf_field(): string
+{
+    return '<input type="hidden" name="_csrf_token" value="' . e(csrf_token()) . '">';
+}
+
+function verify_csrf_token(): void
+{
+    $submitted = $_POST['_csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    $expected = $_SESSION['_csrf_token'] ?? '';
+    if (!is_string($submitted) || !is_string($expected) || $expected === '' || !hash_equals($expected, $submitted)) {
+        http_response_code(419);
+        exit('Your session expired. Refresh the page and try again.');
+    }
+}
+
+function verify_csrf_for_session_api(): void
+{
+    if (bearer_token()) {
+        return;
+    }
+    verify_csrf_token();
+}
+
 /**
  * All vouchers for a scholar in currently open distribution batches.
  *
@@ -181,39 +212,63 @@ function generate_voucher_code(): string
 
 function generate_missing_vouchers_for_batch(PDO $pdo, int $batchId): int
 {
-    $batch = $pdo->prepare('SELECT * FROM distribution_batches WHERE id = ?');
-    $batch->execute([$batchId]);
-    $batchRow = $batch->fetch();
-    if (!$batchRow || $batchRow['status'] === 'closed') {
-        return 0;
+    $ownsTransaction = !$pdo->inTransaction();
+    if ($ownsTransaction) $pdo->beginTransaction();
+
+    try {
+        $batch = $pdo->prepare(
+            'SELECT b.*, p.total_budget
+             FROM distribution_batches b
+             JOIN scholarship_programs p ON p.id = b.program_id
+             WHERE b.id = ? FOR UPDATE'
+        );
+        $batch->execute([$batchId]);
+        $batchRow = $batch->fetch();
+        if (!$batchRow || $batchRow['status'] === 'closed') {
+            if ($ownsTransaction) $pdo->commit();
+            return 0;
+        }
+
+        $stmt = $pdo->prepare(
+            'SELECT e.scholar_id, p.amount FROM enrollments e
+             JOIN scholarship_programs p ON p.id = e.program_id
+             WHERE e.program_id = ? AND e.status = "active"
+             AND NOT EXISTS (SELECT 1 FROM claim_vouchers v WHERE v.batch_id = ? AND v.scholar_id = e.scholar_id)'
+        );
+        $stmt->execute([(int) $batchRow['program_id'], $batchId]);
+        $eligibleScholars = $stmt->fetchAll() ?: [];
+        if ($eligibleScholars === []) {
+            if ($ownsTransaction) $pdo->commit();
+            return 0;
+        }
+
+        $committed = $pdo->prepare(
+            'SELECT COALESCE(SUM(v.amount), 0) FROM claim_vouchers v
+             JOIN distribution_batches b ON b.id = v.batch_id
+             WHERE b.program_id = ? AND v.status IN ("pending", "claimed")'
+        );
+        $committed->execute([(int) $batchRow['program_id']]);
+        $committedAmount = (float) $committed->fetchColumn();
+        $newVoucherValue = array_sum(array_map(static fn (array $scholar): float => (float) $scholar['amount'], $eligibleScholars));
+        $budget = (float) $batchRow['total_budget'];
+
+        if ($budget <= 0) throw new \RuntimeException('Set a total program budget before generating vouchers.');
+        if ($committedAmount + $newVoucherValue > $budget) throw new \RuntimeException('Generating these vouchers would exceed the program budget.');
+
+        $insert = $pdo->prepare(
+            'INSERT INTO claim_vouchers (batch_id, scholar_id, voucher_code, amount, status, expires_at)
+             VALUES (?, ?, ?, ?, "pending", DATE_ADD(?, INTERVAL 180 DAY))'
+        );
+        foreach ($eligibleScholars as $row) {
+            $insert->execute([$batchId, $row['scholar_id'], generate_voucher_code(), $row['amount'], $batchRow['distribution_date']]);
+        }
+
+        if ($ownsTransaction) $pdo->commit();
+        return count($eligibleScholars);
+    } catch (\Throwable $error) {
+        if ($ownsTransaction && $pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
     }
-
-    $stmt = $pdo->prepare(
-        'SELECT e.scholar_id, p.amount FROM enrollments e
-         JOIN scholarship_programs p ON p.id = e.program_id
-         WHERE e.program_id = ? AND e.status = "active"
-         AND NOT EXISTS (SELECT 1 FROM claim_vouchers v WHERE v.batch_id = ? AND v.scholar_id = e.scholar_id)'
-    );
-    $stmt->execute([(int) $batchRow['program_id'], $batchId]);
-
-    $insert = $pdo->prepare(
-        'INSERT INTO claim_vouchers (batch_id, scholar_id, voucher_code, amount, status, expires_at)
-         VALUES (?, ?, ?, ?, "pending", DATE_ADD(?, INTERVAL 180 DAY))'
-    );
-
-    $count = 0;
-    foreach ($stmt->fetchAll() as $row) {
-        $insert->execute([
-            $batchId,
-            $row['scholar_id'],
-            generate_voucher_code(),
-            $row['amount'],
-            $batchRow['distribution_date'],
-        ]);
-        $count++;
-    }
-
-    return $count;
 }
 
 function sync_vouchers_for_program(PDO $pdo, int $programId): int
@@ -367,6 +422,7 @@ function badge_class(string $status): string
         'expired', 'inactive', 'closed' => 'badge-muted',
         'void', 'removed', 'negative' => 'badge-negative',
         'admin' => 'badge-accent',
+        'approver' => 'badge-accent',
         'staff' => 'badge-warning',
         'student' => 'badge-muted',
         default => 'badge-muted',
@@ -377,6 +433,7 @@ function role_label(string $role): string
 {
     return match ($role) {
         'admin' => 'Admin',
+        'approver' => 'Approver',
         'staff' => 'Staff',
         'student' => 'Student',
         default => ucfirst($role),

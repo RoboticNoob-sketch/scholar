@@ -68,6 +68,9 @@ function render_foot(): void
         echo '<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>' . "\n";
         echo '<script src="' . e(asset_url('assets/js/admin-tables.js')) . '"></script>' . "\n";
     }
+    if (!empty(page_assets()['qr_preview'])) {
+        echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>' . "\n";
+    }
     echo '<script src="' . e(asset_url('assets/js/app.js')) . '"></script>' . "\n";
     echo "</body></html>\n";
 }
@@ -131,12 +134,21 @@ function render_admin_layout(PDO $pdo, string $active, string $title, callable $
         'dashboard' => ['Dashboard', 'admin/dashboard.php', 'layout-dashboard'],
         'scholars' => ['Scholars', 'admin/scholars.php', 'users'],
         'users' => ['Users', 'admin/users.php', 'user-cog'],
+        'requests' => ['My Requests', 'admin/requests.php', 'send'],
         'programs' => ['Programs', 'admin/programs.php', 'graduation-cap'],
         'batches' => ['Batches', 'admin/batches.php', 'package'],
         'reports' => ['Reports', 'admin/reports.php', 'file-bar-chart'],
         'audit' => ['Audit Logs', 'admin/audit.php', 'scroll-text'],
     ];
     render_shell_layout($pdo, ['admin'], $nav, $active, $title, 'Admin', $content);
+}
+
+function render_approver_layout(PDO $pdo, string $active, string $title, callable $content): void
+{
+    $nav = [
+        'approvals' => ['Approval Queue', 'admin/approvals.php', 'clipboard-check'],
+    ];
+    render_shell_layout($pdo, ['approver'], $nav, $active, $title, 'Approver', $content);
 }
 
 function render_staff_layout(PDO $pdo, string $active, string $title, callable $content): void

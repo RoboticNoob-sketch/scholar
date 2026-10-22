@@ -57,6 +57,7 @@ render_staff_layout($pdo, 'scanner', 'QR Scanner', function () use ($batch, $bat
     echo '<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>';
     echo '<script>';
     echo 'const batchId = ' . (int) $batchId . ';';
+    echo 'const csrfToken = ' . json_encode(csrf_token()) . ';';
     echo 'let scanMode = "voucher";';
     echo 'let verificationToken = null;';
     echo 'let verifiedScholarName = null;';
@@ -65,8 +66,8 @@ render_staff_layout($pdo, 'scanner', 'QR Scanner', function () use ($batch, $bat
     echo 'function showVerified(name){ verifiedScholarName=name; verifiedBanner.hidden=false; document.getElementById("verifiedName").textContent=name; }';
     echo 'function clearVerified(){ verificationToken=null; verifiedScholarName=null; verifiedBanner.hidden=true; }';
     echo 'function showResult(ok, title, lines){ resultEl.hidden=false; resultEl.className="scan-result "+(ok?"success":"error"); resultEl.innerHTML="<h3>"+title+"</h3>"+lines.map(l=>"<p>"+l+"</p>").join(""); }';
-    echo 'async function redeem(payload){ const body={batch_id:batchId,payload}; if(verificationToken) body.verification_token=verificationToken; const r=await fetch("' . base_url('api/claims/redeem.php') . '",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); return r.json(); }';
-    echo 'async function verify(payload){ const r=await fetch("' . base_url('api/claims/verify-profile.php') . '",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({payload,batch_id:batchId})}); return r.json(); }';
+    echo 'async function redeem(payload){ const body={batch_id:batchId,payload}; if(verificationToken) body.verification_token=verificationToken; const r=await fetch("' . base_url('api/claims/redeem.php') . '",{method:"POST",headers:{"Content-Type":"application/json","X-CSRF-Token":csrfToken},body:JSON.stringify(body)}); return r.json(); }';
+    echo 'async function verify(payload){ const r=await fetch("' . base_url('api/claims/verify-profile.php') . '",{method:"POST",headers:{"Content-Type":"application/json","X-CSRF-Token":csrfToken},body:JSON.stringify({payload,batch_id:batchId})}); return r.json(); }';
     echo 'async function handlePayload(payload){ if(scanMode==="profile"){ const data=await verify(payload); if(data.success && data.verification_token){ verificationToken=data.verification_token; showVerified(data.scholar?data.scholar.name:"Scholar verified"); scanMode="voucher"; document.querySelectorAll("#modeToggle button").forEach(b=>b.classList.toggle("active",b.dataset.mode==="voucher")); } else { clearVerified(); } showResult(data.success,data.message||data.error,[data.scholar?data.scholar.name+" · "+data.scholar.student_no:""].filter(Boolean)); return; } if(!verificationToken){ showResult(false,"Profile verification required",["Scan the scholar profile QR first, then scan the voucher."]); return; } const data=await redeem(payload); if(data.success){ clearVerified(); } showResult(data.success,data.message||data.error,[data.scholar?data.scholar.name+" · "+data.scholar.student_no:"", data.amount?"Amount: "+data.amount:""].filter(Boolean)); if(data.success) loadRecent(); }';
     echo 'document.getElementById("modeToggle").addEventListener("click",e=>{ if(e.target.dataset.mode){ scanMode=e.target.dataset.mode; document.querySelectorAll("#modeToggle button").forEach(b=>b.classList.toggle("active",b.dataset.mode===scanMode)); }});';
     echo 'document.getElementById("manualForm").addEventListener("submit",e=>{ e.preventDefault(); const v=document.getElementById("manualCode").value.trim(); if(v) handlePayload(v.startsWith("VCH|")?v:"VCH|"+v); });';

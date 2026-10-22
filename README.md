@@ -16,6 +16,12 @@ Capstone project: QR-integrated monitoring for scholarship financial assistance 
    - [`database/schema.sql`](database/schema.sql)
    - [`database/seed.sql`](database/seed.sql)
 
+For an existing database, apply [`database/migrate-program-budget.sql`](database/migrate-program-budget.sql) and [`database/migrate-approval-workflow.sql`](database/migrate-approval-workflow.sql) once before using program budgets and approver accounts.
+
+For Hostinger, select the live database in phpMyAdmin and import [`database/migrate-live-approval.sql`](database/migrate-live-approval.sql). It is safe to rerun; do not import `schema.sql` or `seed.sql` into a live database.
+
+For Hostinger, select the live database in phpMyAdmin and run [`database/migrate-live-approval.sql`](database/migrate-live-approval.sql) once. It is safe to rerun and does not import seed data.
+
 Or from PowerShell:
 
 ```powershell

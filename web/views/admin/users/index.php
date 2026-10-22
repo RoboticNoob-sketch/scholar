@@ -18,7 +18,7 @@
     <label class="field-label" for="role">Role</label>
     <select class="select" id="role" name="role">
       <option value="">All roles</option>
-      <?php foreach (['admin', 'staff', 'student'] as $role): ?>
+      <?php foreach (['admin', 'approver', 'staff', 'student'] as $role): ?>
         <option value="<?= e($role) ?>"<?= $roleFilter === $role ? ' selected' : '' ?>><?= e(role_label($role)) ?></option>
       <?php endforeach; ?>
     </select>

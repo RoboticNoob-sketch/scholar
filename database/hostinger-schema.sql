@@ -6,7 +6,7 @@ CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(80) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'staff', 'student') NOT NULL,
+    role ENUM('admin', 'approver', 'staff', 'student') NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -36,6 +36,7 @@ CREATE TABLE scholarship_programs (
     name VARCHAR(120) NOT NULL,
     description TEXT NULL,
     amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    total_budget DECIMAL(14,2) NOT NULL DEFAULT 0.00,
     academic_year VARCHAR(20) NOT NULL,
     semester VARCHAR(20) NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
@@ -113,6 +114,23 @@ CREATE TABLE audit_logs (
     ip_address VARCHAR(45) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE approval_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    request_type VARCHAR(40) NOT NULL,
+    entity_id INT UNSIGNED NULL,
+    payload LONGTEXT NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    submitted_by INT UNSIGNED NOT NULL,
+    reviewed_by INT UNSIGNED NULL,
+    review_note VARCHAR(1000) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at DATETIME NULL,
+    CONSTRAINT fk_approval_submitter FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_approval_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE RESTRICT,
+    INDEX idx_approval_status_created (status, created_at),
+    INDEX idx_approval_entity (request_type, entity_id, status)
 );
 
 CREATE INDEX idx_vouchers_status ON claim_vouchers(status);

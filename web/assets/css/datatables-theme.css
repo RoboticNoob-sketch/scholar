@@ -1,6 +1,7 @@
 .dataTables_wrapper {
   color: var(--text-primary);
   font-size: 13px;
+  position: relative;
 }
 
 .dataTables_wrapper .dataTables_length,
@@ -11,6 +12,90 @@
   font-size: 12px;
   padding: 12px 16px 0;
 }
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter { display: none; }
+
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 16px 14px;
+}
+
+.grid-toolbar-start,
+.grid-toolbar-actions { display: flex; align-items: center; gap: 8px; }
+.grid-search { position: relative; min-width: min(300px, 58vw); }
+.grid-search svg { position: absolute; top: 50%; left: 12px; width: 15px; height: 15px; color: var(--text-tertiary); transform: translateY(-50%); pointer-events: none; }
+.grid-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 36px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font: inherit;
+}
+.grid-search input:focus { outline: none; border-color: var(--accent); }
+.grid-result-count { color: var(--text-tertiary); font-size: 11px; white-space: nowrap; }
+.grid-page-size {
+  height: 36px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+}
+.grid-tool-button,
+.grid-columns summary {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--surface-page);
+  color: var(--text-secondary);
+  cursor: pointer;
+  list-style: none;
+}
+.grid-tool-button:hover,
+.grid-columns summary:hover { border-color: var(--accent); color: var(--text-primary); }
+.grid-tool-button[aria-pressed="true"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--border-default)); }
+.grid-tool-button svg,
+.grid-columns summary svg { width: 16px; height: 16px; }
+.grid-columns { position: relative; }
+.grid-columns summary::-webkit-details-marker { display: none; }
+.grid-columns-menu {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 190px;
+  max-height: 260px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  background: var(--surface-card);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+}
+.grid-column-option { display: flex; align-items: center; gap: 8px; padding: 7px 8px; color: var(--text-secondary); font-size: 12px; cursor: pointer; }
+.grid-column-option:hover { color: var(--text-primary); background: var(--surface-card-alt); }
+.grid-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px 14px; }
+.grid-footer .dataTables_info,
+.grid-footer .dataTables_paginate { padding: 0; }
+.dataTables_wrapper[data-density="compact"] table.dataTable tbody td,
+.dataTables_wrapper[data-density="compact"] .table td,
+.dataTables_wrapper[data-density="compact"] .table th { padding-top: 8px; padding-bottom: 8px; }
+.dataTables_wrapper .dataTables_processing { z-index: 2; }
 
 .dataTables_wrapper .dataTables_filter input,
 .dataTables_wrapper .dataTables_length select {
@@ -46,6 +131,8 @@ table.dataTable.no-footer {
   margin-left: 4px;
 }
 
+.dataTables_wrapper .dataTables_paginate .paginate_button { min-width: 34px; min-height: 34px; }
+
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
   background: var(--accent) !important;
@@ -64,4 +151,14 @@ table.dataTable.no-footer {
   border: 1px solid var(--surface-elevated-alt);
   border-radius: 8px;
   color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .grid-toolbar { align-items: stretch; padding-inline: 12px; }
+  .grid-toolbar-start { flex-wrap: wrap; }
+  .grid-search { min-width: 100%; }
+  .grid-toolbar-actions { justify-content: flex-end; }
+  .grid-result-count { margin-right: auto; }
+  .grid-footer { align-items: flex-start; flex-direction: column; padding-inline: 12px; }
+  .grid-footer .dataTables_paginate { align-self: center; }
 }

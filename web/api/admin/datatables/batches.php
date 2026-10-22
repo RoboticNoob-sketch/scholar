@@ -7,7 +7,8 @@ require_once __DIR__ . '/../../../includes/bootstrap.php';
 use App\Queries\BatchQueries;
 
 $input = require_admin_datatables($pdo);
-$result = BatchQueries::datatables($pdo, $input);
+$programId = (int) ($_GET['program_id'] ?? $_POST['program_id'] ?? 0);
+$result = BatchQueries::datatables($pdo, $input, $programId);
 
 $data = [];
 foreach ($result['rows'] as $row) {

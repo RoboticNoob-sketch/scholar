@@ -19,6 +19,7 @@ final class DashboardController
             'label' => 'Active Scholars',
             'value' => (string) $stats['active_scholars'],
             'hint' => $stats['total_scholars'] . ' total registered',
+            'icon' => 'users-round',
             'href' => 'admin/scholars.php',
             'tone' => '',
         ],
@@ -26,6 +27,7 @@ final class DashboardController
             'label' => 'Active Programs',
             'value' => (string) $stats['active_programs'],
             'hint' => 'Current scholarship cycle',
+            'icon' => 'graduation-cap',
             'href' => 'admin/programs.php',
             'tone' => '',
         ],
@@ -33,6 +35,7 @@ final class DashboardController
             'label' => 'Open Batches',
             'value' => (string) $stats['open_batches'],
             'hint' => $stats['pending_vouchers'] . ' pending vouchers',
+            'icon' => 'package-open',
             'href' => 'admin/batches.php',
             'tone' => 'warning',
         ],
@@ -40,15 +43,16 @@ final class DashboardController
             'label' => 'Claims Today',
             'value' => (string) $stats['claims_today'],
             'hint' => format_money($stats['disbursed_month']) . ' this month',
+            'icon' => 'badge-dollar-sign',
             'href' => 'admin/reports.php',
             'tone' => 'muted',
             'muted' => true,
         ],
     ],
     'batchProgress' => DashboardQueries::openBatchProgress($pdo),
-    'recentClaims' => DashboardQueries::recentClaims($pdo),
+    'recentClaims' => DashboardQueries::recentClaims($pdo, 12),
     'activity' => DashboardQueries::recentActivity($pdo),
-]);
+], ['datatables' => true]);
 
     }
 }

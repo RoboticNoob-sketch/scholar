@@ -72,7 +72,8 @@ if ($id > 0) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_role($pdo, ['admin']);
+    $admin = require_role($pdo, ['admin']);
+    verify_csrf_token();
 
     $studentNo = trim($_POST['student_no'] ?? '');
     $firstName = trim($_POST['first_name'] ?? '');
@@ -91,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($postId > 0) {
+            $pdo->beginTransaction();
             $stmt = $pdo->prepare('SELECT * FROM scholars WHERE id = ?');
             $stmt->execute([$postId]);
             $scholar = $stmt->fetch();
@@ -99,6 +101,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect('admin/scholars.php');
             }
 
+            $currentProgramsStmt = $pdo->prepare('SELECT program_id FROM enrollments WHERE scholar_id = ? AND status = "active"');
+            $currentProgramsStmt->execute([$postId]);
+            $currentProgramIds = array_map('intval', array_column($currentProgramsStmt->fetchAll(), 'program_id'));
+            $previousPrograms = $currentProgramIds;
+            $requestedPrograms = array_values(array_unique(array_map('intval', $programIds)));
+            sort($previousPrograms);
+            sort($requestedPrograms);
+
             $photoPath = handle_scholar_photo_upload($postId, $scholar['photo_path'] ?? null, $removePhoto);
             $stmt = $pdo->prepare(
                 'UPDATE scholars SET student_no=?, first_name=?, last_name=?, course=?, year_level=?, email=?, phone=?, photo_path=?, status=? WHERE id=?'
@@ -106,11 +116,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$studentNo, $firstName, $lastName, $course, $yearLevel, $email, $phone, $photoPath, $status, $postId]);
             save_scholar_user($pdo, $scholar, $username, $password);
 
-            $voucherCount = sync_enrollments_for_scholar($pdo, $postId, $programIds);
-            $message = 'Scholar updated.';
-            if ($voucherCount > 0) {
-                $message .= " $voucherCount voucher(s) synced to open batches.";
+            if ($previousPrograms !== $requestedPrograms) {
+                \App\Services\ApprovalService::submit(
+                    $pdo,
+                    'scholar_enrollment_update',
+                    ['program_ids' => $programIds],
+                    (int) $admin['id'],
+                    $postId
+                );
             }
+            $pdo->commit();
+            $message = $previousPrograms !== $requestedPrograms
+                ? 'Scholar profile updated. Program enrollment changes are awaiting approval.'
+                : 'Scholar updated.';
             flash('success', $message);
             redirect('admin/scholar-view.php?id=' . $postId);
         }
@@ -137,13 +155,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare('UPDATE scholars SET photo_path=? WHERE id=?')->execute([$photoPath, $newId]);
         }
 
-        $voucherCount = sync_enrollments_for_scholar($pdo, $newId, $programIds);
+        if ($programIds !== []) {
+            \App\Services\ApprovalService::submit(
+                $pdo,
+                'scholar_enrollment_update',
+                ['program_ids' => $programIds],
+                (int) $admin['id'],
+                $newId
+            );
+        }
         $pdo->commit();
 
-        $message = 'Scholar created.';
-        if ($voucherCount > 0) {
-            $message .= " $voucherCount voucher(s) synced to open batches.";
-        }
+        $message = $programIds !== []
+            ? 'Scholar created. Program enrollment is awaiting approval.'
+            : 'Scholar created.';
         flash('success', $message);
         redirect('admin/scholar-view.php?id=' . $newId);
     } catch (Throwable $e) {
@@ -215,6 +240,7 @@ render_admin_layout($pdo, 'scholars', $pageTitle, function () use (
 
     echo '<div class="scholar-form-layout">';
     echo '<form method="post" enctype="multipart/form-data" class="card form-grid scholar-form-card">';
+    echo csrf_field();
     if ($isEdit) {
         echo '<input type="hidden" name="id" value="' . (int) $scholar['id'] . '">';
     }

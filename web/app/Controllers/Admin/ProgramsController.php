@@ -5,61 +5,41 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use PDO;
+use App\Queries\ProgramQueries;
+use App\Services\ApprovalService;
 
 final class ProgramsController
 {
     public static function handle(PDO $pdo): void
     {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_role($pdo, ['admin']);
+    $user = require_role($pdo, ['admin']);
+    verify_csrf_token();
     $id = (int) ($_POST['id'] ?? 0);
-    $name = trim($_POST['name'] ?? '');
-    $amount = (float) ($_POST['amount'] ?? 0);
-    $academicYear = trim($_POST['academic_year'] ?? '');
-    $semester = trim($_POST['semester'] ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $status = $_POST['status'] ?? 'active';
-    $scholarIds = array_map('intval', $_POST['scholar_ids'] ?? []);
+    $payload = [
+        'name' => trim($_POST['name'] ?? ''),
+        'description' => trim($_POST['description'] ?? ''),
+        'amount' => (float) ($_POST['amount'] ?? 0),
+        'total_budget' => max(0, (float) ($_POST['total_budget'] ?? 0)),
+        'academic_year' => trim($_POST['academic_year'] ?? ''),
+        'semester' => trim($_POST['semester'] ?? ''),
+        'status' => $_POST['status'] ?? 'active',
+        'scholar_ids' => array_values(array_unique(array_filter(array_map('intval', $_POST['scholar_ids'] ?? []), static fn (int $scholarId): bool => $scholarId > 0))),
+    ];
 
-    if ($id > 0) {
-        $pdo->prepare(
-            'UPDATE scholarship_programs SET name=?, description=?, amount=?, academic_year=?, semester=?, status=? WHERE id=?'
-        )->execute([$name, $description, $amount, $academicYear, $semester, $status, $id]);
-        $message = 'Program updated.';
-    } else {
-        $pdo->prepare(
-            'INSERT INTO scholarship_programs (name, description, amount, academic_year, semester, status) VALUES (?,?,?,?,?,?)'
-        )->execute([$name, $description, $amount, $academicYear, $semester, $status]);
-        $id = (int) $pdo->lastInsertId();
-        $message = 'Program created.';
+    try {
+        ApprovalService::submit($pdo, $id > 0 ? 'program_update' : 'program_create', $payload, (int) $user['id'], $id > 0 ? $id : null);
+        flash('success', 'Program request submitted. It will take effect after an approver reviews it.');
+    } catch (\Throwable $error) {
+        flash('error', $error->getMessage());
+        redirect($id > 0 ? 'admin/program-form.php?id=' . $id : 'admin/program-form.php');
     }
-
-    if ($id > 0) {
-        $pdo->prepare('UPDATE enrollments SET status="removed" WHERE program_id=? AND status="active"')->execute([$id]);
-    }
-
-    if ($scholarIds) {
-        $insert = $pdo->prepare(
-            'INSERT INTO enrollments (scholar_id, program_id, status) VALUES (?, ?, "active")
-             ON DUPLICATE KEY UPDATE status="active"'
-        );
-        foreach ($scholarIds as $sid) {
-            $insert->execute([$sid, $id]);
-        }
-    }
-
-    if ($id > 0) {
-        $voucherCount = sync_vouchers_for_program($pdo, $id);
-        if ($voucherCount > 0) {
-            $message .= " $voucherCount voucher(s) added to open distribution batch(es).";
-        }
-    }
-
-    flash('success', $message);
-    redirect('admin/programs.php');
+    redirect('admin/requests.php');
 }
 
-render_admin_page($pdo, 'programs', 'Programs', 'admin/programs/index', [], ['datatables' => true]);
+render_admin_page($pdo, 'programs', 'Programs', 'admin/programs/index', [
+    'overview' => ProgramQueries::overview($pdo),
+], ['datatables' => true]);
 
     }
 }

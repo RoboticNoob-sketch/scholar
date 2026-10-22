@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 :root{
---font-title:'Work Sans',CircularSp-Arab,CircularSp-Hebr,CircularSp-Cyrl,CircularSp-Grek,CircularSp-Deva,'Helvetica Neue',helvetica,arial,'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,'MS Gothic',sans-serif;
---font-ui:'Work Sans',CircularSp-Arab,CircularSp-Hebr,CircularSp-Cyrl,CircularSp-Grek,CircularSp-Deva,'Helvetica Neue',helvetica,arial,'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,'MS Gothic',sans-serif;
+--font-title:'Space Grotesk',sans-serif;
+--font-ui:'DM Sans',sans-serif;
 --font-mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
 }

@@ -45,6 +45,7 @@ final class UserFormController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf_token();
             $postId = (int) ($_POST['id'] ?? 0);
             $username = trim($_POST['username'] ?? '');
             $password = $_POST['password'] ?? '';
@@ -55,7 +56,7 @@ final class UserFormController
                 flash('error', 'Username is required.');
                 redirect($postId > 0 ? 'admin/user-form.php?id=' . $postId : 'admin/user-form.php');
             }
-            if (!in_array($role, ['admin', 'staff', 'student'], true)) {
+            if (!in_array($role, ['admin', 'approver', 'staff', 'student'], true)) {
                 flash('error', 'Invalid role selected.');
                 redirect($postId > 0 ? 'admin/user-form.php?id=' . $postId : 'admin/user-form.php');
             }
@@ -71,6 +72,11 @@ final class UserFormController
                 if (!$existing) {
                     flash('error', 'User not found.');
                     redirect('admin/users.php');
+                }
+
+                if (in_array($role, ['admin', 'approver'], true) && (($password !== '' && strlen($password) < 12) || ($password === '' && $existing['role'] !== $role))) {
+                    flash('error', 'Admin and approver accounts require a new password with at least 12 characters when created or promoted.');
+                    redirect('admin/user-form.php?id=' . $postId);
                 }
 
                 if ((int) $existing['id'] === (int) $currentAdmin['id'] && $status === 'inactive') {
@@ -113,7 +119,15 @@ final class UserFormController
             }
 
             if ($password === '') {
+                if (in_array($role, ['admin', 'approver'], true)) {
+                    flash('error', 'Admin and approver accounts require a password with at least 12 characters.');
+                    redirect('admin/user-form.php');
+                }
                 $password = 'password';
+            }
+            if (in_array($role, ['admin', 'approver'], true) && strlen($password) < 12) {
+                flash('error', 'Admin and approver passwords must contain at least 12 characters.');
+                redirect('admin/user-form.php');
             }
 
             $dup = $pdo->prepare('SELECT id FROM users WHERE username = ?');
@@ -153,6 +167,7 @@ final class UserFormController
             }
 
             echo '<form method="post" class="card form-grid form-narrow">';
+            echo csrf_field();
             if ($user) {
                 echo '<input type="hidden" name="id" value="' . (int) $user['id'] . '">';
             }
@@ -162,11 +177,11 @@ final class UserFormController
 
             echo '<div><label class="field-label">Password</label>';
             echo '<input class="input" type="password" name="password" autocomplete="new-password"';
-            echo $user ? ' placeholder="Leave blank to keep current password">' : ' placeholder="Leave blank for default: password">';
+            echo $user ? ' placeholder="Leave blank to keep current password">' : ' placeholder="Required for Admin/Approver (12+ characters)">';
             echo '</div>';
 
             echo '<div><label class="field-label">Role</label><select class="select" name="role">';
-            foreach (['admin' => 'Admin — full portal access', 'staff' => 'Staff — distribution scanner', 'student' => 'Student — mobile app login'] as $val => $label) {
+            foreach (['admin' => 'Admin — submit and manage records', 'approver' => 'Approver — review program and batch requests', 'staff' => 'Staff — distribution scanner', 'student' => 'Student — mobile app login'] as $val => $label) {
                 $sel = ($user['role'] ?? 'staff') === $val ? ' selected' : '';
                 echo '<option value="' . $val . '"' . $sel . '>' . e($label) . '</option>';
             }
@@ -180,7 +195,7 @@ final class UserFormController
             echo '</select></div>';
 
             if (!$user) {
-                echo '<p class="login-hint">Staff and admin accounts can log in on the web portal. Student accounts use the mobile app.</p>';
+                echo '<p class="login-hint">Admin and approver passwords require at least 12 characters. Staff and admin accounts use the web portal; students use the mobile app.</p>';
             }
 
             echo '<button class="btn btn-primary btn-md" type="submit">' . ($user ? 'SAVE CHANGES' : 'CREATE USER') . '</button>';

@@ -22,6 +22,7 @@ render_admin_page($pdo, 'users', 'Users', 'admin/users/index', [
         ['label' => 'Total users', 'value' => $stats['total'], 'tone' => ''],
         ['label' => 'Active', 'value' => $stats['active'], 'tone' => 'accent'],
         ['label' => 'Admins', 'value' => $stats['admin'], 'tone' => ''],
+        ['label' => 'Approvers', 'value' => $stats['approver'], 'tone' => 'accent'],
         ['label' => 'Staff', 'value' => $stats['staff'], 'tone' => 'warning'],
         ['label' => 'Students', 'value' => $stats['student'], 'tone' => ''],
     ],

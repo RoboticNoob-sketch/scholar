@@ -8,6 +8,7 @@ $user = current_user($pdo);
 if ($user) {
     redirect(match ($user['role']) {
         'admin' => 'admin/dashboard.php',
+        'approver' => 'admin/approvals.php',
         'staff' => 'staff/dashboard.php',
         default => 'login.php',
     });

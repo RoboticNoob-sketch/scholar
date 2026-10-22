@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/bootstrap.php';
 
 $user = require_api_role($pdo, ['staff']);
+verify_csrf_for_session_api();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['success' => false, 'error' => 'Method not allowed'], 405);

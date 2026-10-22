@@ -11,6 +11,7 @@ if (current_user($pdo)) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf_token();
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -26,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             audit_log($pdo, (int) $user['id'], 'login', 'user', (int) $user['id'], 'User logged in');
             redirect(match ($user['role']) {
                 'admin' => 'admin/dashboard.php',
+                'approver' => 'admin/approvals.php',
                 'staff' => 'staff/dashboard.php',
                 default => 'login.php',
             });
@@ -48,9 +50,10 @@ render_login_layout('Login', function () use ($error): void {
         echo '<div class="alert-error"><i data-lucide="alert-circle"></i><span>' . e($error) . '</span></div>';
     }
     echo '<form method="post" class="form-grid">';
+    echo csrf_field();
     echo '<div><label class="field-label">Username</label><input class="input" name="username" required autocomplete="username" placeholder="Enter username"></div>';
     echo '<div><label class="field-label">Password</label><input class="input" type="password" name="password" required autocomplete="current-password" placeholder="Enter password"></div>';
-    echo '<p class="login-hint">Admin goes to dashboard. Staff goes to the distribution scanner.</p>';
+    echo '<p class="login-hint">Admins manage records, approvers review requests, and staff scan claims.</p>';
     echo '<button class="btn btn-primary btn-lg" type="submit">LOG IN</button>';
     echo '<div class="login-demo">Demo accounts · admin / password · staff1 / password</div>';
     echo '</form>';

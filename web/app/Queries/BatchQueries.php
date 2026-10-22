@@ -16,22 +16,34 @@ final class BatchQueries
                 WHERE 1=1';
     }
 
-    public static function datatables(PDO $pdo, array $input): array
+    public static function datatables(PDO $pdo, array $input, int $programId = 0): array
     {
         [$searchSql, $searchParams] = datatables_search_clause(
             ['b.name', 'p.name', 'b.venue', 'b.status'],
             $input['search']
         );
 
-        $base = self::baseSql() . $searchSql;
-        $params = $searchParams;
+        $base = self::baseSql();
+        $params = [];
+        if ($programId > 0) {
+            $base .= ' AND b.program_id = ?';
+            $params[] = $programId;
+        }
+        $base .= $searchSql;
+        $params = array_merge($params, $searchParams);
 
         $countSql = 'SELECT COUNT(*) FROM (' . $base . ') AS counted';
         $countStmt = $pdo->prepare($countSql);
         $countStmt->execute($params);
         $filtered = (int) $countStmt->fetchColumn();
 
-        $total = (int) $pdo->query('SELECT COUNT(*) FROM distribution_batches')->fetchColumn();
+        if ($programId > 0) {
+            $totalStmt = $pdo->prepare('SELECT COUNT(*) FROM distribution_batches WHERE program_id = ?');
+            $totalStmt->execute([$programId]);
+            $total = (int) $totalStmt->fetchColumn();
+        } else {
+            $total = (int) $pdo->query('SELECT COUNT(*) FROM distribution_batches')->fetchColumn();
+        }
 
         $orderMap = [
             'b.name',
@@ -82,11 +94,12 @@ final class BatchQueries
 
         $orderMap = [
             's.last_name',
+            's.last_name',
             's.student_no',
+            'v.voucher_code',
             'v.amount',
             'v.status',
             'c.claimed_at',
-            'v.id',
         ];
         $order = datatables_order_clause($orderMap, $input['order_column'], $input['order_dir']);
 

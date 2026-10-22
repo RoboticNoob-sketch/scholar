@@ -10,10 +10,10 @@ INSERT INTO scholars (user_id, student_no, first_name, last_name, course, year_l
 (3, '2022-01456', 'Maria', 'Santos', 'BS Information Technology', '3rd Year', 'm.santos@stateu.edu.ph', SHA2('profile-maria-2022-01456', 256), 'SCH000000000001', 'active'),
 (4, '2022-01891', 'Juan', 'Dela Cruz', 'BS Computer Science', '2nd Year', 'j.delacruz@stateu.edu.ph', SHA2('profile-juan-2022-01891', 256), 'SCH000000000002', 'active');
 
-INSERT INTO scholarship_programs (name, description, amount, academic_year, semester, status) VALUES
-('TES Grant', 'Tertiary Education Subsidy grant assistance', 5000.00, '2025-2026', '1st Semester', 'active'),
-('Merit Scholarship', 'Academic merit-based scholarship', 8000.00, '2025-2026', '1st Semester', 'active'),
-('Financial Aid Program', 'Need-based financial assistance', 3500.00, '2025-2026', '1st Semester', 'active');
+INSERT INTO scholarship_programs (name, description, amount, total_budget, academic_year, semester, status) VALUES
+('TES Grant', 'Tertiary Education Subsidy grant assistance', 5000.00, 0.00, '2025-2026', '1st Semester', 'active'),
+('Merit Scholarship', 'Academic merit-based scholarship', 8000.00, 0.00, '2025-2026', '1st Semester', 'active'),
+('Financial Aid Program', 'Need-based financial assistance', 3500.00, 250000.00, '2025-2026', '1st Semester', 'active');
 
 INSERT INTO enrollments (scholar_id, program_id, status) VALUES
 (1, 1, 'active'),

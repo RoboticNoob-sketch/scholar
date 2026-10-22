@@ -14,9 +14,15 @@ $user = require_role($pdo, ['admin']);
 $id = (int) ($_GET['id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf_token();
     $action = $_POST['action'] ?? '';
     if ($action === 'open') {
-        $count = generate_missing_vouchers_for_batch($pdo, $id);
+        try {
+            $count = generate_missing_vouchers_for_batch($pdo, $id);
+        } catch (\RuntimeException $error) {
+            flash('error', $error->getMessage());
+            redirect('admin/batch-view.php?id=' . $id);
+        }
         $pdo->prepare('UPDATE distribution_batches SET status="open" WHERE id=?')->execute([$id]);
         audit_log($pdo, (int) $user['id'], 'batch_opened', 'distribution_batch', $id, 'Batch opened');
         flash('success', $count > 0
@@ -27,7 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         audit_log($pdo, (int) $user['id'], 'batch_closed', 'distribution_batch', $id, 'Batch closed');
         flash('success', 'Batch closed.');
     } elseif ($action === 'generate') {
-        $count = generate_missing_vouchers_for_batch($pdo, $id);
+        try {
+            $count = generate_missing_vouchers_for_batch($pdo, $id);
+        } catch (\RuntimeException $error) {
+            flash('error', $error->getMessage());
+            redirect('admin/batch-view.php?id=' . $id);
+        }
+        audit_log($pdo, (int) $user['id'], 'vouchers_generated', 'distribution_batch', $id, "$count vouchers generated");
         flash('success', $count > 0 ? "$count vouchers generated." : 'All enrolled scholars already have vouchers.');
     } elseif ($action === 'void') {
         if (empty($_POST['voucher_ids'])) {
@@ -38,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $params = array_merge($ids, [$id]);
             $pdo->prepare("UPDATE claim_vouchers SET status='void' WHERE id IN ($placeholders) AND batch_id = ? AND status = 'pending'")
                 ->execute($params);
+            audit_log($pdo, (int) $user['id'], 'vouchers_voided', 'distribution_batch', $id, count($ids) . ' voucher(s) voided');
             flash('success', 'Selected vouchers voided.');
         }
     }
@@ -74,7 +87,7 @@ render_admin_page($pdo, 'batches', $batch['name'], 'admin/batches/view', [
         ['label' => 'Claimed', 'value' => $counts['claimed'], 'tone' => ''],
         ['label' => 'Void', 'value' => $counts['void'], 'tone' => 'negative'],
     ],
-], ['datatables' => true]);
+], ['datatables' => true, 'qr_preview' => true]);
 
     }
 }
