@@ -219,15 +219,20 @@
 
 .application-filter-bar {
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 14px 0;
+  gap: 12px;
+  margin: 14px 0 18px;
+  padding: 16px 18px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
 }
 
-.application-filter-bar label { display: grid; gap: 5px; color: var(--text-secondary); font-size: 11px; }
-.application-filter-bar select { min-width: 180px; height: 38px; padding: 0 10px; border: 1px solid var(--border-default); border-radius: 5px; background: var(--surface-card); color: var(--text-primary); }
-.application-clear-filter { padding: 10px 4px; color: var(--text-secondary); font-size: 12px; }
+.application-filter-bar label { display: grid; gap: 6px; color: var(--text-secondary); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.application-filter-bar select { min-width: 220px; height: 42px; padding: 0 12px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--surface-card); color: var(--text-primary); font-size: 14px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.application-filter-bar .btn { height: 42px; margin: 0; display: inline-flex; align-items: center; gap: 8px; }
+.application-clear-filter { height: 42px; display: inline-flex; align-items: center; padding: 0 4px; color: var(--text-secondary); font-size: 12px; }
 .application-clear-filter:hover { color: var(--accent); }
 .application-queue-card { overflow: hidden; padding: 0; }
 .application-queue-card .table-wrap { overflow-x: auto; }
