@@ -13,7 +13,7 @@ final class UserQueries
         return 'SELECT u.*, s.id AS scholar_id, s.student_no, s.first_name, s.last_name
                 FROM users u
                 LEFT JOIN scholars s ON s.user_id = u.id
-                WHERE 1=1';
+            WHERE u.role NOT IN (\'superadmin\', \'super_admin\')';
     }
 
     /**
@@ -43,7 +43,9 @@ final class UserQueries
     public static function stats(PDO $pdo): array
     {
         $counts = $pdo->query(
-            'SELECT role, status, COUNT(*) AS cnt FROM users GROUP BY role, status'
+            'SELECT role, status, COUNT(*) AS cnt FROM users
+             WHERE role NOT IN (\'superadmin\', \'super_admin\')
+             GROUP BY role, status'
         )->fetchAll();
 
         $stats = ['total' => 0, 'active' => 0, 'admin' => 0, 'approver' => 0, 'staff' => 0, 'student' => 0];
@@ -69,7 +71,9 @@ final class UserQueries
         $countStmt->execute($params);
         $filtered = (int) $countStmt->fetchColumn();
 
-        $total = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+        $total = (int) $pdo->query(
+            'SELECT COUNT(*) FROM users WHERE role NOT IN (\'superadmin\', \'super_admin\')'
+        )->fetchColumn();
 
         $orderMap = [
             'u.username',

@@ -73,6 +73,9 @@ final class UserFormController
                     flash('error', 'User not found.');
                     redirect('admin/users.php');
                 }
+                if ($existing['role'] === 'student') {
+                    $role = 'student';
+                }
 
                 if (in_array($role, ['admin', 'approver'], true) && (($password !== '' && strlen($password) < 12) || ($password === '' && $existing['role'] !== $role))) {
                     flash('error', 'Admin and approver accounts require a new password with at least 12 characters when created or promoted.');
@@ -180,12 +183,16 @@ final class UserFormController
             echo $user ? ' placeholder="Leave blank to keep current password">' : ' placeholder="Required for Admin/Approver (12+ characters)">';
             echo '</div>';
 
-            echo '<div><label class="field-label">Role</label><select class="select" name="role">';
-            foreach (['admin' => 'Admin — submit and manage records', 'approver' => 'Approver — review program and batch requests', 'staff' => 'Staff — distribution scanner', 'student' => 'Student — mobile app login'] as $val => $label) {
-                $sel = ($user['role'] ?? 'staff') === $val ? ' selected' : '';
-                echo '<option value="' . $val . '"' . $sel . '>' . e($label) . '</option>';
+            if ($user && $user['role'] === 'student') {
+                echo '<div><label class="field-label">Role</label><select class="select" disabled><option selected>Student — fixed role</option></select><input type="hidden" name="role" value="student"></div>';
+            } else {
+                echo '<div><label class="field-label">Role</label><select class="select" name="role">';
+                foreach (['admin' => 'Admin — submit and manage records', 'approver' => 'Approver — review program and batch requests', 'staff' => 'Staff — distribution scanner', 'student' => 'Student — mobile app login'] as $val => $label) {
+                    $sel = ($user['role'] ?? 'staff') === $val ? ' selected' : '';
+                    echo '<option value="' . $val . '"' . $sel . '>' . e($label) . '</option>';
+                }
+                echo '</select></div>';
             }
-            echo '</select></div>';
 
             echo '<div><label class="field-label">Status</label><select class="select" name="status">';
             foreach (['active', 'inactive'] as $s) {
