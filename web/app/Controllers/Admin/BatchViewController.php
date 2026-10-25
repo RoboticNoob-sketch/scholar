@@ -29,9 +29,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? "Batch opened. $count voucher(s) generated for newly enrolled scholars."
             : 'Batch opened for distribution.');
     } elseif ($action === 'close') {
+        $batchStatus = $pdo->prepare('SELECT status FROM distribution_batches WHERE id = ?');
+        $batchStatus->execute([$id]);
+        if ($batchStatus->fetchColumn() !== 'open') {
+            flash('error', 'Only an open batch can be closed.');
+            redirect('admin/batch-view.php?id=' . $id);
+        }
+        if (($_POST['confirm_close'] ?? '') !== '1') {
+            flash('error', 'Please confirm that you want to close and sign off this batch.');
+            redirect('admin/batch-view.php?id=' . $id);
+        }
+        $pdo->beginTransaction();
+        $expire = $pdo->prepare('UPDATE claim_vouchers SET status="expired" WHERE batch_id = ? AND status = "pending"');
+        $expire->execute([$id]);
+        $expired = $expire->rowCount();
         $pdo->prepare('UPDATE distribution_batches SET status="closed" WHERE id=?')->execute([$id]);
-        audit_log($pdo, (int) $user['id'], 'batch_closed', 'distribution_batch', $id, 'Batch closed');
-        flash('success', 'Batch closed.');
+        $pdo->commit();
+        audit_log($pdo, (int) $user['id'], 'batch_closed', 'distribution_batch', $id, "Batch closed and signed off; $expired unclaimed voucher(s) expired");
+        flash('success', $expired > 0
+            ? "Batch closed and signed off. $expired unclaimed voucher(s) were marked expired."
+            : 'Batch closed and signed off. All vouchers were claimed or voided.');
     } elseif ($action === 'generate') {
         try {
             $count = generate_missing_vouchers_for_batch($pdo, $id);

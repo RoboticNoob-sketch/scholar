@@ -18,7 +18,7 @@
       <a class="btn btn-primary btn-sm" href="<?= e(base_url('admin/print-vouchers.php?id=' . (int) $batch['id'])) ?>"><i data-lucide="printer"></i> PRINT PENDING (<?= (int) $counts['pending'] ?>)</a>
     <?php endif; ?>
     <?php if ($batch['status'] === 'open'): ?>
-      <form method="post"><?= csrf_field() ?><input type="hidden" name="action" value="close"><button class="btn btn-secondary btn-sm" type="submit">CLOSE BATCH</button></form>
+      <button class="btn btn-secondary btn-sm" type="button" data-close-batch-open>CLOSE BATCH</button>
     <?php endif; ?>
     <a class="btn btn-outline btn-sm" href="<?= e(base_url('admin/export-batch.php?id=' . (int) $batch['id'])) ?>">EXPORT CSV</a>
     <a class="btn btn-outline btn-sm" href="<?= e(base_url('admin/export-batch-pdf.php?id=' . (int) $batch['id'])) ?>">EXPORT PDF</a>
@@ -89,6 +89,50 @@
     </div>
   </div>
 </dialog>
+
+<?php if ($batch['status'] === 'open'): ?>
+<dialog class="voucher-dialog close-batch-dialog" id="close-batch-dialog" aria-labelledby="close-batch-title">
+  <form method="post" class="voucher-dialog-content">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="close">
+    <div class="voucher-dialog-header">
+      <div>
+        <div class="panel-eyebrow">Sign off batch</div>
+        <h2 id="close-batch-title">Close “<?= e($batch['name']) ?>”?</h2>
+      </div>
+      <button class="icon-btn" type="button" data-close-batch-cancel aria-label="Cancel"><i data-lucide="x"></i></button>
+    </div>
+    <?php if ((int) $counts['pending'] > 0): ?>
+      <div class="close-batch-warning is-alert">
+        <i data-lucide="triangle-alert"></i>
+        <div>
+          <strong><?= (int) $counts['pending'] ?> scholar<?= (int) $counts['pending'] === 1 ? '' : 's' ?> have not claimed yet.</strong>
+          Their vouchers will be marked <em>expired</em> and can no longer be scanned or redeemed.
+        </div>
+      </div>
+    <?php else: ?>
+      <div class="close-batch-warning">
+        <i data-lucide="check-circle-2"></i>
+        <div>Every voucher in this batch is already claimed or voided.</div>
+      </div>
+    <?php endif; ?>
+    <ul class="close-batch-list">
+      <li>Closing is final. A closed batch cannot be reopened.</li>
+      <li>No more vouchers can be generated, voided or claimed.</li>
+      <li>Claimed: <strong><?= (int) $counts['claimed'] ?></strong> · Pending: <strong><?= (int) $counts['pending'] ?></strong> · Void: <strong><?= (int) $counts['void'] ?></strong></li>
+    </ul>
+    <label class="close-batch-confirm">
+      <input type="checkbox" name="confirm_close" value="1" data-close-batch-check>
+      <span>I understand and want to sign off this batch.</span>
+    </label>
+    <div class="voucher-dialog-actions">
+      <button class="btn btn-outline btn-sm" type="button" data-close-batch-cancel>Keep open</button>
+      <button class="btn btn-primary btn-sm" type="submit" data-close-batch-submit disabled>Close &amp; sign off</button>
+    </div>
+  </form>
+</dialog>
+<script src="<?= e(asset_url('assets/js/batch-close.js')) ?>"></script>
+<?php endif; ?>
 
 <?php if ((int) $counts['total'] === 0): ?>
   <div class="empty-state">No vouchers generated yet — confirm eligible scholars to generate.</div>

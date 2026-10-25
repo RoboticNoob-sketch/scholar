@@ -2152,3 +2152,14 @@ body {
   .dash-bars { gap: 3px; }
   .dash-bar-d { writing-mode: vertical-rl; transform: rotate(180deg); }
 }
+
+.close-batch-warning { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; margin: 14px 0; border-radius: 12px; border: 1px solid var(--surface-elevated); background: rgba(255,255,255,.03); font-size: .9rem; }
+.close-batch-warning i { flex: none; width: 20px; height: 20px; }
+.close-batch-warning.is-alert { border-color: rgba(226,128,131,.5); background: rgba(226,128,131,.08); }
+.close-batch-warning.is-alert i { color: #e28083; }
+.close-batch-list { margin: 0 0 14px; padding-left: 18px; font-size: .85rem; opacity: .85; display: grid; gap: 4px; }
+.close-batch-confirm { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; font-size: .9rem; cursor: pointer; }
+.close-batch-confirm input { width: 18px; height: 18px; }
+.close-batch-dialog { max-width: 480px; }
+
+.close-batch-dialog .btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
