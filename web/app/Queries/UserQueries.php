@@ -13,7 +13,13 @@ final class UserQueries
         return 'SELECT u.*, s.id AS scholar_id, s.student_no, s.first_name, s.last_name
                 FROM users u
                 LEFT JOIN scholars s ON s.user_id = u.id
-            WHERE u.role NOT IN (\'superadmin\', \'super_admin\')';
+            WHERE u.role NOT IN (\'superadmin\', \'super_admin\')
+              AND (u.is_system = 0 OR u.id = ' . self::viewerId() . ')';
+    }
+
+    private static function viewerId(): int
+    {
+        return (int) ($_SESSION['user_id'] ?? 0);
     }
 
     /**
@@ -45,6 +51,7 @@ final class UserQueries
         $counts = $pdo->query(
             'SELECT role, status, COUNT(*) AS cnt FROM users
              WHERE role NOT IN (\'superadmin\', \'super_admin\')
+               AND (is_system = 0 OR id = ' . self::viewerId() . ')
              GROUP BY role, status'
         )->fetchAll();
 
@@ -72,7 +79,7 @@ final class UserQueries
         $filtered = (int) $countStmt->fetchColumn();
 
         $total = (int) $pdo->query(
-            'SELECT COUNT(*) FROM users WHERE role NOT IN (\'superadmin\', \'super_admin\')'
+            'SELECT COUNT(*) FROM users WHERE role NOT IN (\'superadmin\', \'super_admin\') AND (is_system = 0 OR id = ' . self::viewerId() . ')'
         )->fetchColumn();
 
         $orderMap = [

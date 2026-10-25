@@ -18,7 +18,7 @@ Domain: **https://scholarship-qr-monitor.online**
 1. Back up the database and note the current deployed commit.
 2. hPanel → **Websites** → **Git** → **Pull** (or Deploy).
 3. Confirm `public_html/.htaccess`, `public_html/index.php`, and `public_html/web/config/config.local.php` still exist.
-4. If the release includes new migrations, inspect the live schema first and run only missing migrations once in phpMyAdmin.
+4. Database migrations run automatically on the first request after the pull (see `database/migrations/`). Back up first; do not run them manually.
 5. Test the homepage, Google registration, student API, and staff login over HTTPS.
 
 ## Expected folder layout after Git pull

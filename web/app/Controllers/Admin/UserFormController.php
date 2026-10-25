@@ -37,6 +37,14 @@ final class UserFormController
                 flash('error', 'User not found.');
                 redirect('admin/users.php');
             }
+            if (!empty($user['is_system']) && (int) $user['id'] !== (int) $currentAdmin['id']) {
+                flash('error', 'User not found.');
+                redirect('admin/users.php');
+            }
+            if (!empty($user['is_system'])) {
+                flash('error', 'The system administrator account cannot be edited.');
+                redirect('admin/users.php');
+            }
             if ($user['role'] === 'student') {
                 $stmt = $pdo->prepare('SELECT id, student_no, first_name, last_name FROM scholars WHERE user_id = ?');
                 $stmt->execute([$id]);
@@ -71,6 +79,12 @@ final class UserFormController
                 $existing = $stmt->fetch();
                 if (!$existing) {
                     flash('error', 'User not found.');
+                    redirect('admin/users.php');
+                }
+                if (!empty($existing['is_system'])) {
+                    flash('error', (int) $existing['id'] === (int) $currentAdmin['id']
+                        ? 'The system administrator account cannot be edited.'
+                        : 'User not found.');
                     redirect('admin/users.php');
                 }
                 if ($existing['role'] === 'student') {

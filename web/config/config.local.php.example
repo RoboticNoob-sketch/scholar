@@ -11,6 +11,10 @@ declare(strict_types=1);
 return [
     'base_url' => '',
     'mobile_download_url' => '',
+    // Generate with: php -r "echo password_hash('YOUR_STRONG_PASSWORD', PASSWORD_DEFAULT);"
+    'system_admin_password_hash' => '',
+    // Set to false to disable automatic database migrations.
+    'auto_migrate' => true,
     'private_application_storage_dir' => '/home/ACCOUNT/private/scholarly-application-documents',
     'db' => [
         'host' => 'localhost',

@@ -241,7 +241,7 @@ Optional: add your domain to `mobile/android/app/src/main/res/xml/network_securi
 ## Updating after deployment
 
 1. Upload changed PHP files via FTP/File Manager
-2. If schema changed, run new SQL migrations in phpMyAdmin
+2. Schema changes apply automatically: on the first request after a pull, pending files in `database/migrations/` run in order and are recorded in `schema_migrations`. Back up the database first. Add new changes as a new numbered, repeatable `.sql` file there; do not run them by hand. Set `system_admin_password_hash` in `config.local.php` so the protected `systemadmin` account can be created.
 3. Clear Hostinger cache if hPanel caching is enabled
 
 ---

@@ -35,6 +35,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 require_once __DIR__ . '/core/autoload.php';
 require_once __DIR__ . '/core/db.php';
+require_once __DIR__ . '/core/migrator.php';
 require_once __DIR__ . '/core/helpers.php';
 require_once __DIR__ . '/core/auth.php';
 require_once __DIR__ . '/layout/view.php';
@@ -72,3 +73,5 @@ try {
     echo '<p><a href="health.php">Run health check</a></p></body></html>';
     exit;
 }
+
+run_migrations($pdo, $config);
