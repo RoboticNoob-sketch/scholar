@@ -2,6 +2,7 @@
 use App\Queries\AuditQueries;
 
 $dateFrom = date('Y-m-d', strtotime('-6 days'));
+$presetAction = (string) ($_GET['action'] ?? '');
 ?>
 <div class="breadcrumb">Admin / Audit Logs</div>
 <div class="page-header"><h1 class="page-title">Audit Logs</h1></div>
@@ -30,7 +31,7 @@ $dateFrom = date('Y-m-d', strtotime('-6 days'));
     <label class="field-label" for="audit-action">Action</label>
     <select class="select" id="audit-action" name="action">
       <option value="">All actions</option>
-      <option value="failures">Failures &amp; rejections only</option>
+      <option value="failures"<?= $presetAction === 'failures' ? ' selected' : '' ?>>Failures &amp; rejections only</option>
       <?php foreach (AuditQueries::actionGroups() as $key => $group): ?>
         <optgroup label="<?= e($group['label']) ?>">
           <option value="group:<?= e($key) ?>">All <?= e(strtolower($group['label'])) ?></option>

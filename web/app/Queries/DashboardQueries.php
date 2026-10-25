@@ -73,6 +73,52 @@ final class DashboardQueries
         return $stmt->fetchAll() ?: [];
     }
 
+    public static function attention(PDO $pdo): array
+    {
+        $row = $pdo->query(
+            'SELECT
+                (SELECT COUNT(*) FROM scholarship_applications WHERE status IN ("submitted","under_review","needs_info")) AS applications,
+                (SELECT COUNT(*) FROM approval_requests WHERE status = "pending") AS approvals,
+                (SELECT COUNT(*) FROM audit_logs WHERE action IN ("login_failed","scan_failed") AND created_at >= NOW() - INTERVAL 1 DAY) AS failures'
+        )->fetch();
+
+        return [
+            'applications' => (int) ($row['applications'] ?? 0),
+            'approvals' => (int) ($row['approvals'] ?? 0),
+            'failures' => (int) ($row['failures'] ?? 0),
+        ];
+    }
+
+    /** Claims and amount per day for the last $days days, zero-filled. */
+    public static function claimsTrend(PDO $pdo, int $days = 14): array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT DATE(c.claimed_at) AS d, COUNT(*) AS n, COALESCE(SUM(v.amount), 0) AS amount
+             FROM claims c
+             JOIN claim_vouchers v ON v.id = c.voucher_id
+             WHERE c.claimed_at >= CURDATE() - INTERVAL ? DAY
+             GROUP BY DATE(c.claimed_at)'
+        );
+        $stmt->bindValue(1, $days - 1, PDO::PARAM_INT);
+        $stmt->execute();
+        $found = [];
+        foreach ($stmt->fetchAll() ?: [] as $r) {
+            $found[$r['d']] = $r;
+        }
+
+        $out = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-$i day"));
+            $out[] = [
+                'date' => $d,
+                'count' => (int) ($found[$d]['n'] ?? 0),
+                'amount' => (float) ($found[$d]['amount'] ?? 0),
+            ];
+        }
+
+        return $out;
+    }
+
     public static function recentActivity(PDO $pdo, int $limit = 8): array
     {
         $stmt = $pdo->prepare(

@@ -24,6 +24,49 @@
   <?php endforeach; ?>
 </div>
 
+<?php
+  $attnItems = [
+    ['n' => $attention['applications'], 'label' => 'Applications awaiting review', 'href' => 'admin/applications.php', 'icon' => 'file-text'],
+    ['n' => $attention['approvals'], 'label' => 'Pending approval requests', 'href' => 'admin/requests.php', 'icon' => 'send'],
+    ['n' => $attention['failures'], 'label' => 'Failed sign-ins / scans (24h)', 'href' => 'admin/audit.php?action=failures', 'icon' => 'shield-alert', 'warn' => true],
+  ];
+  $trendMax = max(1, ...array_column($trend, 'count'));
+  $trendTotal = array_sum(array_column($trend, 'count'));
+  $trendAmount = array_sum(array_column($trend, 'amount'));
+?>
+<div class="dash-attn">
+  <?php foreach ($attnItems as $a): ?>
+    <a class="dash-attn-item<?= $a['n'] > 0 ? (!empty($a['warn']) ? ' is-warn' : ' is-active') : '' ?>" href="<?= e(base_url($a['href'])) ?>">
+      <span class="dash-attn-icon"><i data-lucide="<?= e($a['icon']) ?>"></i></span>
+      <span class="dash-attn-n"><?= (int) $a['n'] ?></span>
+      <span class="dash-attn-label"><?= e($a['label']) ?></span>
+    </a>
+  <?php endforeach; ?>
+</div>
+
+<div class="card dashboard-panel dash-trend">
+  <div class="card-title-row">
+    <div>
+      <div class="panel-eyebrow">Last 14 days</div>
+      <div class="card-title"><i data-lucide="trending-up"></i> Claims trend</div>
+    </div>
+    <span class="grid-live"><?= (int) $trendTotal ?> claims · <?= e(format_money((float) $trendAmount)) ?></span>
+  </div>
+  <?php if ($trendTotal === 0): ?>
+    <div class="empty-state">No claims in the last 14 days.</div>
+  <?php else: ?>
+    <div class="dash-bars" role="img" aria-label="Claims per day for the last 14 days">
+      <?php foreach ($trend as $t): ?>
+        <div class="dash-bar-col" title="<?= e(format_date($t['date'])) ?>: <?= (int) $t['count'] ?> claims · <?= e(format_money($t['amount'])) ?>">
+          <span class="dash-bar-n"><?= $t['count'] > 0 ? (int) $t['count'] : '' ?></span>
+          <span class="dash-bar<?= $t['date'] === date('Y-m-d') ? ' is-today' : '' ?>" style="height: <?= max(3, (int) round($t['count'] / $trendMax * 100)) ?>%"></span>
+          <span class="dash-bar-d"><?= e(date('M j', strtotime($t['date']))) ?></span>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+</div>
+
 <div class="split-grid dashboard-split">
   <div class="card dashboard-panel">
     <div class="card-title-row">
@@ -135,7 +178,7 @@
       <div class="activity-item">
         <div class="activity-top">
           <span class="activity-who"><?= e($item['username'] ?? 'System') ?></span>
-          <span class="badge badge-accent"><?= e(str_replace('_', ' ', $item['action'])) ?></span>
+          <span class="badge <?= str_contains($item['action'], 'failed') || str_contains($item['action'], 'rejected') ? 'badge-negative' : 'badge-accent' ?>"><?= e(str_replace('_', ' ', $item['action'])) ?></span>
         </div>
         <div class="activity-meta">
           <?= e($item['details'] ?? $item['entity_type']) ?> · <?= e(format_datetime($item['created_at'])) ?>

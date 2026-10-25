@@ -49,6 +49,8 @@ final class DashboardController
             'muted' => true,
         ],
     ],
+    'attention' => DashboardQueries::attention($pdo),
+    'trend' => DashboardQueries::claimsTrend($pdo, 14),
     'batchProgress' => DashboardQueries::openBatchProgress($pdo),
     'recentClaims' => DashboardQueries::recentClaims($pdo, 12),
     'activity' => DashboardQueries::recentActivity($pdo),
