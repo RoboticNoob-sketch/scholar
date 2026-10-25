@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import '../services/session_service.dart';
 import '../widgets/app_card.dart';
@@ -15,9 +16,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    serverClientId: ApiService.googleServerClientId.isEmpty ? null : ApiService.googleServerClientId,
+  );
   final _username = TextEditingController();
   final _password = TextEditingController();
-  final _server = TextEditingController(text: ApiService.productionHost);
+  final _server = TextEditingController(text: ApiService.localWifiHost);
   bool _loading = false;
   bool _obscure = true;
   bool _showServer = false;
@@ -37,8 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
       'http://192.168.1.19',
       'http://192.168.37.246',
     };
-    if (saved == null || saved.isEmpty || legacy.contains(saved)) {
-      saved = ApiService.productionHost;
+    if (saved == null || saved.isEmpty || legacy.contains(saved) || saved == ApiService.productionHost) {
+      saved = ApiService.localWifiHost;
       await SessionService.saveServerHost(saved);
     }
     if (mounted) {
@@ -74,7 +79,54 @@ class _LoginScreenState extends State<LoginScreen> {
       final tried = ApiService.triedUrls.isEmpty ? ApiService.lastTriedUrl : ApiService.triedUrls.join('\n');
       setState(() {
         _error =
-            'Cannot reach server.\n\nUse mobile data or Wi-Fi with internet.\nDefault: ${ApiService.productionHost}\n\nTried:\n$tried';
+            'Cannot reach local server. Check that Apache is running and the phone and PC are on the same Wi-Fi.\n\nDefault: ${ApiService.localWifiHost}\n\nTried:\n$tried';
+      });
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _submitGoogle() async {
+    if (ApiService.googleServerClientId.isEmpty) {
+      setState(() => _error = 'Google sign-in is not configured. Add the Web OAuth client ID to the app run configuration.');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final server = _server.text.trim();
+    ApiService.customHost = server;
+    await SessionService.saveServerHost(server);
+
+    var stage = 'Google account selection';
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account == null) return;
+      stage = 'Google identity token';
+      final idToken = (await account.authentication).idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw StateError('Google did not return an identity token. Check the Web OAuth client ID.');
+      }
+
+      stage = 'Local server login';
+      final res = await ApiService.loginWithGoogle(idToken);
+      if (res['success'] != true || ApiService.token == null) {
+        setState(() => _error = res['error']?.toString() ?? 'Google sign-in failed.');
+        return;
+      }
+
+      await SessionService.saveSession(
+        token: ApiService.token!,
+        role: ApiService.role ?? 'student',
+        username: ApiService.username ?? account.email,
+      );
+      widget.onLoggedIn(ApiService.role ?? 'student');
+    } catch (error) {
+      setState(() {
+        final details = error is StateError ? error.message : error.toString();
+        _error = '$stage failed: $details';
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -159,14 +211,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _server,
                           decoration: const InputDecoration(
                             labelText: 'Server URL',
-                            hintText: ApiService.productionHost,
+                            hintText: ApiService.localWifiHost,
                             prefixIcon: Icon(Icons.dns_outlined, size: 20),
                           ),
                           keyboardType: TextInputType.url,
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'Live: https://scholarship-qr-monitor.online · Local USB: http://127.0.0.1:8080',
+                          'Local Wi-Fi: ${ApiService.localWifiHost} · USB: ${ApiService.localUsbHost}',
                           style: TextStyle(fontSize: 10, color: AppTheme.textTertiary),
                         ),
                       ],
@@ -186,6 +238,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ElevatedButton(
                         onPressed: _loading ? null : _submit,
                         child: Text(_loading ? 'LOGGING IN...' : 'LOG IN'),
+                      ),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: _loading ? null : _submitGoogle,
+                        icon: const Icon(Icons.g_mobiledata, size: 24),
+                        label: const Text('CONTINUE WITH GOOGLE'),
                       ),
                     ],
                   ),

@@ -40,6 +40,7 @@ class BootstrapScreen extends StatefulWidget {
 class _BootstrapScreenState extends State<BootstrapScreen> {
   bool _loading = true;
   bool _loggedIn = false;
+  bool _hasScholar = false;
   String? _role;
 
   @override
@@ -64,6 +65,15 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
       ApiService.username = username;
       _role = role;
       _loggedIn = true;
+      if (role == 'student') {
+        try {
+          final response = await ApiService.getProfile();
+          final profile = response['profile'];
+          _hasScholar = response['success'] == true && profile is Map && profile['is_scholar'] == true;
+        } catch (_) {
+          _hasScholar = ApiService.scholar != null;
+        }
+      }
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -72,6 +82,7 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     setState(() {
       _loggedIn = true;
       _role = role;
+      _hasScholar = ApiService.scholar != null;
     });
   }
 
@@ -79,6 +90,7 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     setState(() {
       _loggedIn = false;
       _role = null;
+      _hasScholar = false;
     });
   }
 
@@ -95,6 +107,6 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     if (_role == 'staff') {
       return StaffMainShell(onLogout: _onLogout);
     }
-    return MainShell(onLogout: _onLogout);
+    return MainShell(onLogout: _onLogout, hasScholar: _hasScholar);
   }
 }

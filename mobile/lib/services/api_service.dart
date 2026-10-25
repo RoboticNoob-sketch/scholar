@@ -1,20 +1,28 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   static const productionHost = 'https://scholarship-qr-monitor.online';
+  static const googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '53011635142-vu8rdf9iliouls09pun58prf1ku0k294.apps.googleusercontent.com',
+  );
+  static const localWifiHost = 'http://192.168.1.44';
+  static const localUsbHost = 'http://127.0.0.1:8080';
   static const localWebPath = '/scholarship-qr-monitor/web';
 
   static const _defaultAndroidHosts = [
-    productionHost,
-    'http://127.0.0.1:8080',
+    localWifiHost,
+    localUsbHost,
     'http://192.168.1.18',
     'http://192.168.1.19',
+    productionHost,
   ];
 
-  static String customHost = productionHost;
+  static String customHost = localWifiHost;
   static String phoneBaseUrl = '';
   static String lastTriedUrl = '';
   static List<String> triedUrls = [];
@@ -26,10 +34,13 @@ class ApiService {
 
   static String webPathForHost(String host) {
     final h = host.trim().toLowerCase().replaceAll(RegExp(r'/+$'), '');
+    final hostname = Uri.tryParse(h)?.host ?? h;
+    final isPrivateIpv4 = RegExp(
+      r'^(?:10(?:\.\d{1,3}){3}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2})$',
+    ).hasMatch(hostname);
     if (h.contains('127.0.0.1') ||
         h.contains('localhost') ||
-        h.contains('10.0.2.2') ||
-        RegExp(r'192\.168\.\d+\.\d+').hasMatch(h)) {
+        isPrivateIpv4) {
       return localWebPath;
     }
     return '';
@@ -118,7 +129,13 @@ class ApiService {
     throw StateError('Cannot reach server');
   }
 
-  static Future<Map<String, dynamic>> login(String user, String password) async {
+  static Future<Map<String, dynamic>> login(String user, String password) =>
+      _authenticate('api/auth/login.php', {'username': user, 'password': password});
+
+  static Future<Map<String, dynamic>> loginWithGoogle(String idToken) =>
+      _authenticate('api/auth/google-login.php', {'id_token': idToken});
+
+  static Future<Map<String, dynamic>> _authenticate(String path, Map<String, dynamic> body) async {
     phoneBaseUrl = '';
     triedUrls = [];
     Object? lastError;
@@ -130,9 +147,9 @@ class ApiService {
       try {
         final res = await http
             .post(
-              _uri('api/auth/login.php', candidate),
+              _uri(path, candidate),
               headers: _headers,
-              body: jsonEncode({'username': user, 'password': password}),
+              body: jsonEncode(body),
             )
             .timeout(const Duration(seconds: 15));
 
@@ -142,9 +159,7 @@ class ApiService {
           token = data['token'] as String;
           role = data['role']?.toString();
           username = (data['user'] as Map?)?['username']?.toString();
-          if (data['scholar'] is Map<String, dynamic>) {
-            scholar = data['scholar'] as Map<String, dynamic>;
-          }
+          scholar = data['scholar'] is Map<String, dynamic> ? data['scholar'] as Map<String, dynamic> : null;
         }
         return data;
       } catch (e) {
@@ -160,6 +175,42 @@ class ApiService {
   static Future<Map<String, dynamic>> getStatus() => _get('api/student/status.php');
   static Future<Map<String, dynamic>> getProfile() => _get('api/student/profile.php');
   static Future<Map<String, dynamic>> getHistory() => _get('api/student/history.php');
+  static Future<Map<String, dynamic>> getApplications() => _get('api/student/applications.php');
+
+  static Future<Map<String, dynamic>> submitApplication({
+    required Map<String, String> fields,
+    PlatformFile? photo,
+    PlatformFile? enrollmentForm,
+  }) async {
+    try {
+      await resolveBaseUrl();
+    } on StateError {
+      return {'success': false, 'error': 'Cannot reach server. Check your internet connection and Server settings.'};
+    }
+
+    final request = http.MultipartRequest('POST', _uri('api/student/applications.php'));
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    request.fields.addAll(fields);
+
+    try {
+      if (photo != null) {
+        final bytes = photo.bytes;
+        if (bytes == null) return {'success': false, 'error': 'Could not read the selected photo. Choose it again.'};
+        request.files.add(http.MultipartFile.fromBytes('photo_2x2', bytes, filename: photo.name));
+      }
+      if (enrollmentForm != null) {
+        final bytes = enrollmentForm.bytes;
+        if (bytes == null) return {'success': false, 'error': 'Could not read the selected enrollment form. Choose it again.'};
+        request.files.add(http.MultipartFile.fromBytes('enrollment_form', bytes, filename: enrollmentForm.name));
+      }
+
+      final streamed = await request.send().timeout(const Duration(seconds: 60));
+      final response = await http.Response.fromStream(streamed);
+      return _decode(response.body, response.statusCode);
+    } catch (error) {
+      return {'success': false, 'error': 'Upload failed. Check your connection and try again.'};
+    }
+  }
 
   // ── Staff ──
   static Future<Map<String, dynamic>> getOpenBatches() => _get('api/staff/batches.php');

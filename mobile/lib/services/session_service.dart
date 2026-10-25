@@ -6,6 +6,7 @@ class SessionService {
   static const _roleKey = 'scholarly_role';
   static const _usernameKey = 'scholarly_username';
   static const _serverKey = 'scholarly_server';
+  static const _applicationUpdateKey = 'scholarly_application_update_id';
 
   static Future<void> saveSession({
     required String token,
@@ -22,11 +23,16 @@ class SessionService {
   static Future<String?> getUsername() => _storage.read(key: _usernameKey);
   static Future<void> saveServerHost(String host) => _storage.write(key: _serverKey, value: host);
   static Future<String?> getServerHost() => _storage.read(key: _serverKey);
+    static Future<int?> getLastApplicationUpdateId() async =>
+      int.tryParse((await _storage.read(key: _applicationUpdateKey)) ?? '');
+    static Future<void> saveLastApplicationUpdateId(int id) =>
+      _storage.write(key: _applicationUpdateKey, value: id.toString());
 
   static Future<void> clear() async {
     await _storage.delete(key: _tokenKey);
     await _storage.delete(key: _roleKey);
     await _storage.delete(key: _usernameKey);
     await _storage.delete(key: _serverKey);
+    await _storage.delete(key: _applicationUpdateKey);
   }
 }

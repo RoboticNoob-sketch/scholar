@@ -9,9 +9,11 @@ import '../widgets/scholar_avatar.dart';
 import '../widgets/status_badge.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, required this.onLogout});
+  const ProfileScreen({super.key, required this.onLogout, required this.isVisible, required this.onScholarStatusChanged});
 
   final VoidCallback onLogout;
+  final bool isVisible;
+  final ValueChanged<bool> onScholarStatusChanged;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -27,18 +29,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _load();
   }
 
+  @override
+  void didUpdateWidget(covariant ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isVisible && widget.isVisible) _load();
+  }
+
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
       final res = await ApiService.getProfile();
       if (!mounted) return;
       if (res['success'] == true) {
-        setState(() => _profile = res['profile'] as Map<String, dynamic>?);
+        final profile = res['profile'] as Map<String, dynamic>?;
+        setState(() => _profile = profile);
+        widget.onScholarStatusChanged(profile?['is_scholar'] == true);
       } else {
         setState(() => _profile = ApiService.scholar);
+        widget.onScholarStatusChanged(ApiService.scholar != null);
       }
     } catch (_) {
-      if (mounted) setState(() => _profile = ApiService.scholar);
+      if (mounted) {
+        setState(() => _profile = ApiService.scholar);
+        widget.onScholarStatusChanged(ApiService.scholar != null);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

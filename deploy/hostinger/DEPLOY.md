@@ -198,6 +198,20 @@ cd mobile
 flutter build apk --release
 ```
 
+### Publish the Android app download
+
+The landing page shows an **Android download coming soon** placeholder until `mobile_download_url` is set. Before publishing, configure a private release keystore and sign the APK with it; the current debug signing setup is for testing only. Keep the keystore and passwords out of Git.
+
+1. Build the signed release APK with `flutter build apk --release`.
+2. Upload it to a versioned path such as `public_html/downloads/scholarly-android-v1.0.0.apk`.
+3. In `web/config/config.local.php`, set:
+
+  ```php
+  'mobile_download_url' => 'https://yourdomain.com/downloads/scholarly-android-v1.0.0.apk',
+  ```
+
+The landing page will then show a **Download Android app** button. When releasing an update, upload a new versioned APK and change this URL. Android may ask users to allow installation from their browser; explain this during distribution and share APKs only through your trusted HTTPS domain.
+
 Optional: add your domain to `mobile/android/app/src/main/res/xml/network_security_config.xml` if you use HTTP during testing (production should use HTTPS only).
 
 ---

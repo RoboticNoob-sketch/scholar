@@ -1,6 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+  document.documentElement.classList.add('js');
+
   if (window.lucide) {
     lucide.createIcons();
+  }
+
+  const revealItems = Array.from(document.querySelectorAll('[data-reveal]'));
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -36px 0px' });
+    revealItems.forEach((item) => revealObserver.observe(item));
+  } else {
+    revealItems.forEach((item) => item.classList.add('is-visible'));
   }
 
   const shell = document.querySelector('.app-shell');
