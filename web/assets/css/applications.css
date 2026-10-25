@@ -278,3 +278,4 @@
   .application-filter-bar select { width: 100%; }
   .application-row-review-panel { width: min(430px, calc(100vw - 70px)); }
 }
+.application-review-form [hidden] { display: none !important; }

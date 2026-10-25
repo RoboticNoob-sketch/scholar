@@ -62,8 +62,8 @@ $statusOptions = ['' => 'All statuses'] + $statusLabels;
                       <form method="post" class="application-review-form">
                         <?= csrf_field() ?><input type="hidden" name="application_id" value="<?= (int) $application['id'] ?>">
                         <label><span>Decision</span><select name="status" required><?php foreach (['under_review' => 'Keep in review', 'needs_info' => 'Request information', 'approved' => 'Approve and create scholar profile', 'declined' => 'Decline registration'] as $value => $label): ?><option value="<?= e($value) ?>" <?= $application['status'] === $value ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?></select></label>
-                        <label><span>Official student number <small>Required only when approving</small></span><input name="student_no" maxlength="32" placeholder="Enter the official student number"></label>
-                        <label><span>Note to student / internal note</span><textarea name="review_note" rows="2" maxlength="1000" placeholder="Required when requesting information"><?= e($application['review_note'] ?? '') ?></textarea></label>
+                        <label data-student-no-field hidden><span>Official student number <small>Required when approving</small></span><input name="student_no" maxlength="32" placeholder="Enter the official student number"></label>
+                        <label><span>Note to student / internal note <small data-note-hint></small></span><textarea name="review_note" rows="3" maxlength="1000" placeholder="Required when requesting information" data-review-note><?= e($application['review_note'] ?? '') ?></textarea></label>
                         <button class="btn btn-primary" type="submit"><i data-lucide="check"></i> Save decision</button>
                       </form>
                     </div>
@@ -77,3 +77,4 @@ $statusOptions = ['' => 'All statuses'] + $statusLabels;
     </div>
   </div>
 <?php endif; ?>
+<script src="<?= e(asset_url('assets/js/application-review.js')) ?>"></script>
