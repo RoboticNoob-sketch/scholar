@@ -9,9 +9,10 @@ import '../widgets/scholar_avatar.dart';
 import '../widgets/status_badge.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, required this.onLogout, required this.isVisible, required this.onScholarStatusChanged});
+  const ProfileScreen({super.key, required this.onLogout, required this.isVisible, required this.onScholarStatusChanged, this.onShowGuide});
 
   final VoidCallback onLogout;
+  final VoidCallback? onShowGuide;
   final bool isVisible;
   final ValueChanged<bool> onScholarStatusChanged;
 
@@ -72,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final p = _profile;
     final name = p?['full_name']?.toString() ?? 'Scholar';
     final initials = name.split(' ').where((e) => e.isNotEmpty).map((e) => e[0]).take(2).join().toUpperCase();
-    final courseYear = [p?['course'], p?['year_level']].where((e) => e != null && e.toString().isNotEmpty).join(' · ');
+    final courseYear = [p?['course'], p?['year_level']].where((e) => e != null && e.toString().isNotEmpty).join(' Â· ');
     final programs = ((p?['programs'] as List?) ?? []).join(', ');
 
     final photoUrl = p?['photo_url']?.toString();
@@ -110,9 +111,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             AppCard(
               child: Column(
                 children: [
-                  _row(Icons.email_outlined, 'Email', p?['email']?.toString() ?? '—'),
+                  _row(Icons.email_outlined, 'Email', p?['email']?.toString() ?? 'â€”'),
                   const Divider(height: 20, color: AppTheme.border),
-                  _row(Icons.school_outlined, 'Program', programs.isEmpty ? '—' : programs),
+                  _row(Icons.school_outlined, 'Program', programs.isEmpty ? 'â€”' : programs),
                   const Divider(height: 20, color: AppTheme.border),
                   Row(
                     children: [
@@ -127,6 +128,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
           const SizedBox(height: 20),
+          if (widget.onShowGuide != null) ...[
+            OutlinedButton.icon(onPressed: widget.onShowGuide, icon: const Icon(Icons.help_outline, size: 18), label: const Text('HOW SCHOLARLY WORKS')),
+            const SizedBox(height: 10),
+          ],
           OutlinedButton.icon(onPressed: _logout, icon: const Icon(Icons.logout, size: 18), label: const Text('LOG OUT')),
           const SizedBox(height: 20),
           const Center(
@@ -134,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 SchoolLogo(size: 36),
                 SizedBox(height: 8),
-                Text('Scholarly · SLSU Tiaong', style: TextStyle(fontSize: 10, color: AppTheme.textTertiary)),
+                Text('Scholarly Â· SLSU Tiaong', style: TextStyle(fontSize: 10, color: AppTheme.textTertiary)),
                 Text('Version 1.0.0', style: TextStyle(fontSize: 10, color: AppTheme.textTertiary)),
               ],
             ),

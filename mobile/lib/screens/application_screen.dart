@@ -9,10 +9,11 @@ import '../widgets/page_header.dart';
 import '../utils/application_updates.dart';
 
 class ApplicationScreen extends StatefulWidget {
-  const ApplicationScreen({super.key, required this.isVisible, required this.onUnreadChanged});
+  const ApplicationScreen({super.key, required this.isVisible, required this.onUnreadChanged, this.refreshTick = 0});
 
   final bool isVisible;
   final ValueChanged<int> onUnreadChanged;
+  final int refreshTick;
 
   @override
   State<ApplicationScreen> createState() => _ApplicationScreenState();
@@ -59,6 +60,8 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     if (!oldWidget.isVisible && widget.isVisible) {
       _newSession = true;
       _load();
+    } else if (widget.isVisible && widget.refreshTick != oldWidget.refreshTick && !_showForm && !_saving) {
+      _load(silent: true);
     }
   }
 
@@ -76,16 +79,18 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     super.dispose();
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final response = await ApiService.getApplications();
       if (!mounted) return;
       if (response['success'] != true) {
-        setState(() => _error = response['error']?.toString() ?? 'Could not load registration progress.');
+        if (!silent) setState(() => _error = response['error']?.toString() ?? 'Could not load registration progress.');
         return;
       }
       final updates = (response['updates'] as List? ?? const [])
@@ -112,7 +117,7 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
         }
       }
     } catch (_) {
-      if (mounted) setState(() => _error = 'Connection failed. Pull to refresh.');
+      if (mounted && !silent) setState(() => _error = 'Connection failed. Pull to refresh.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -707,7 +712,7 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     final parsed = DateTime.tryParse(value?.toString() ?? '');
     if (parsed == null) return 'Recently';
     final date = parsed.toLocal();
-    return '${date.month}/${date.day}/${date.year} Â· ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.month}/${date.day}/${date.year} Ãƒâ€šÃ‚Â· ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   int _intValue(Object? value) => updateId(value);

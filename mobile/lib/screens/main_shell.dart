@@ -7,6 +7,7 @@ import 'qr_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 import 'application_screen.dart';
+import 'welcome_wizard.dart';
 import '../services/api_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
@@ -29,6 +30,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _index = 0;
   int? _qrVoucherId;
   int _unreadApplicationUpdates = 0;
+  int _progressRefresh = 0;
   String? _latestUpdateTitle;
   bool _bannerDismissed = false;
   bool _checking = false;
@@ -44,6 +46,14 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _poller = Timer.periodic(_pollInterval, (_) => _checkForUpdates());
     _checkForUpdates();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowWelcome());
+  }
+
+  Future<void> _maybeShowWelcome() async {
+    final username = await SessionService.getUsername();
+    if (username == null || !mounted || await SessionService.hasSeenWelcome(username)) return;
+    await SessionService.markWelcomeSeen(username);
+    if (mounted) await WelcomeWizard.show(context);
   }
 
   @override
@@ -60,7 +70,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   // The Progress tab is only built while selected, so unread updates are checked here instead.
   Future<void> _checkForUpdates() async {
-    if (_checking || !mounted || _index == _applicationIndex) return;
+    if (!mounted) return;
+    // On the Progress tab the screen refreshes itself quietly, so new updates show up without a manual refresh.
+    if (_index == _applicationIndex) {
+      setState(() => _progressRefresh++);
+      return;
+    }
+    if (_checking) return;
     _checking = true;
     try {
       final response = await ApiService.getApplications();
@@ -168,6 +184,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             ),
             const HistoryScreen(),
             ApplicationScreen(
+              refreshTick: _progressRefresh,
               isVisible: _index == applicationIndex,
               onUnreadChanged: (count) => setState(() => _unreadApplicationUpdates = count),
             ),
@@ -175,10 +192,12 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               onLogout: widget.onLogout,
               isVisible: _index == profileIndex,
               onScholarStatusChanged: _setScholarStatus,
+              onShowGuide: () => WelcomeWizard.show(context),
             ),
           ]
         : [
             ApplicationScreen(
+              refreshTick: _progressRefresh,
               isVisible: _index == applicationIndex,
               onUnreadChanged: (count) => setState(() => _unreadApplicationUpdates = count),
             ),
@@ -186,6 +205,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               onLogout: widget.onLogout,
               isVisible: _index == profileIndex,
               onScholarStatusChanged: _setScholarStatus,
+              onShowGuide: () => WelcomeWizard.show(context),
             ),
           ];
 

@@ -25,8 +25,14 @@ class SessionService {
   static Future<String?> getServerHost() => _storage.read(key: _serverKey);
     static Future<int?> getLastApplicationUpdateId() async =>
       int.tryParse((await _storage.read(key: _applicationUpdateKey)) ?? '');
-    static Future<void> saveLastApplicationUpdateId(int id) =>
+  static Future<void> saveLastApplicationUpdateId(int id) =>
       _storage.write(key: _applicationUpdateKey, value: id.toString());
+
+  // Kept across logouts so the welcome guide shows once per student per device.
+  static Future<bool> hasSeenWelcome(String username) async =>
+      (await _storage.read(key: 'scholarly_welcome_$username')) == '1';
+  static Future<void> markWelcomeSeen(String username) =>
+      _storage.write(key: 'scholarly_welcome_$username', value: '1');
 
   static Future<void> clear() async {
     await _storage.delete(key: _tokenKey);
