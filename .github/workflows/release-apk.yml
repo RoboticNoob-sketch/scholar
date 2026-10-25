@@ -70,7 +70,7 @@ jobs:
           curl --fail --ssl-reqd --insecure --ftp-create-dirs \
             --user "$FTP_USERNAME:$FTP_PASSWORD" \
             -T scholarly.apk \
-            -Q "+RNFR $dir/scholarly.apk.part" -Q "+RNTO $dir/scholarly.apk" \
+            -Q "+RNFR scholarly.apk.part" -Q "+RNTO scholarly.apk" \
             "ftp://$host/$dir/scholarly.apk.part"
 
       - name: Attach to GitHub Release
