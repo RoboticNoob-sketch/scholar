@@ -250,3 +250,11 @@
 .lp-app-copy .lp-dl { margin-top: 8px; gap: 18px; }
 .lp-app-copy .lp-dl-steps { margin-top: 30px; padding: 20px 22px; gap: 14px; }
 .lp-app-copy .lp-dl-steps li { padding: 0; }
+
+/* Spacing fixes: lists and button rows were collapsing against each other */
+.lp .lp-actions { margin-top: 32px; row-gap: 14px; }
+.lp .lp-hero-copy .lp-hero-trust { margin-top: 36px; }
+.lp .lp-app-copy .lp-dl-meta { margin-top: 4px; }
+.lp .lp-app-copy > p { margin-bottom: 8px; }
+.lp .lp-cta .lp-actions { margin-top: 32px; }
+.lp .lp-programs + .lp-note, .lp .lp-note { margin-top: 28px; }
