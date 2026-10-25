@@ -43,18 +43,17 @@ if (isset($_GET['error']) && $_GET['error'] === 'student_web') {
 }
 
 render_login_layout('Login', function () use ($error): void {
-    $school = e(app_config()['school_name']);
-    echo '<h2 class="login-title">' . $school . '</h2>';
-    echo '<p class="login-subtitle">Scholarship Financial Assistance Monitoring</p>';
+    echo '<p class="lg-eyebrow">Staff portal</p>';
+    echo '<h2>Welcome back</h2>';
+    echo '<p class="lg-sub">Sign in to manage scholars, approvals and claims.</p>';
     if ($error) {
-        echo '<div class="alert-error"><i data-lucide="alert-circle"></i><span>' . e($error) . '</span></div>';
+        echo '<div class="lg-alert" role="alert"><i data-lucide="alert-circle"></i><span>' . e($error) . '</span></div>';
     }
-    echo '<form method="post" class="form-grid">';
+    echo '<form method="post" class="lg-form">';
     echo csrf_field();
-    echo '<div><label class="field-label">Username</label><input class="input" name="username" required autocomplete="username" placeholder="Enter username"></div>';
-    echo '<div><label class="field-label">Password</label><input class="input" type="password" name="password" required autocomplete="current-password" placeholder="Enter password"></div>';
-    echo '<p class="login-hint">Admins manage records, approvers review requests, and staff scan claims.</p>';
-    echo '<button class="btn btn-primary btn-lg" type="submit">LOG IN</button>';
-    echo '<div class="login-demo">Demo accounts · admin / password · staff1 / password</div>';
+    echo '<label class="lg-field"><span>Username</span><div class="lg-input"><i data-lucide="user"></i><input name="username" required autocomplete="username" placeholder="Enter username" autofocus></div></label>';
+    echo '<label class="lg-field"><span>Password</span><div class="lg-input"><i data-lucide="lock"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Enter password" data-pw><button type="button" class="lg-eye" data-pw-toggle aria-label="Show password"><i data-lucide="eye"></i></button></div></label>';
+    echo '<button class="lg-submit" type="submit">Log in <i data-lucide="arrow-right"></i></button>';
+    echo '<p class="lg-note"><i data-lucide="info"></i> Admins manage records, approvers review requests, and staff scan claims. Students sign in with Google on the programs page or use the mobile app.</p>';
     echo '</form>';
 });

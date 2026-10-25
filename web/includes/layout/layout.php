@@ -59,6 +59,9 @@ function render_head(string $title): void
     if (!empty(page_assets()['landing'])) {
         echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/landing.css')) . "\">\n";
     }
+    if (!empty(page_assets()['login'])) {
+        echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/login.css')) . "\">\n";
+    }
     if (!empty(page_assets()['applications'])) {
         echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/applications.css')) . "\">\n";
     }
@@ -87,6 +90,9 @@ function render_foot(): void
     echo '<script src="' . e(asset_url('assets/js/app.js')) . '"></script>' . "\n";
     if (!empty(page_assets()['landing'])) {
         echo '<script src="' . e(asset_url('assets/js/landing.js')) . '"></script>' . "\n";
+    }
+    if (!empty(page_assets()['login'])) {
+        echo '<script src="' . e(asset_url('assets/js/login.js')) . '"></script>' . "\n";
     }
     echo "</body></html>\n";
 }
@@ -189,20 +195,32 @@ function render_staff_layout(PDO $pdo, string $active, string $title, callable $
 
 function render_login_layout(string $title, callable $content): void
 {
+    $GLOBALS['page_assets'] = ['login' => true];
     render_head($title);
-    echo '<div class="login-page">';
-    echo '<div class="login-hero">';
-    echo '<div class="login-hero-inner">';
-    render_school_logo('brand-logo brand-logo-lg');
-    echo '<h1>Scholarly<span class="accent">.</span></h1>';
-    echo '<p>' . e(app_config()['school_name']) . '</p>';
-    echo '<ul class="login-features">';
-    echo '<li><i data-lucide="shield-check"></i> Track claims in real time</li>';
-    echo '<li><i data-lucide="qr-code"></i> Secure voucher & profile QR</li>';
-    echo '<li><i data-lucide="bar-chart-3"></i> Admin reports & audit trail</li>';
-    echo '</ul></div></div>';
-    echo '<div class="login-panel"><div class="login-card">';
+    $skPath = dirname(__DIR__, 2) . '/assets/images/sk-cabay-logo.png';
+    echo '<div class="lg">';
+    echo '<aside class="lg-side">';
+    echo '<a class="lg-brand" href="' . e(base_url('index.php')) . '" aria-label="Scholarly home">';
+    echo '<img src="' . e(school_logo_url()) . '" alt="" width="44" height="44">';
+    if (is_file($skPath)) {
+        echo '<img src="' . e(asset_url('assets/images/sk-cabay-logo.png')) . '" alt="" width="44" height="44">';
+    }
+    echo '<span>Scholarly<b>.</b></span></a>';
+    echo '<div class="lg-side-copy">';
+    echo '<p class="lg-kicker">SK Barangay Cabay · SLSU Tiaong</p>';
+    echo '<h1>Scholarships, <span>tracked</span> from claim to cash.</h1>';
+    echo '<ul class="lg-points">';
+    echo '<li><i data-lucide="qr-code"></i><div><b>Secure voucher QR</b><span>Every claim is verified by scan.</span></div></li>';
+    echo '<li><i data-lucide="shield-check"></i><div><b>Role-based access</b><span>Admins, approvers and staff see only what they need.</span></div></li>';
+    echo '<li><i data-lucide="bar-chart-3"></i><div><b>Reports &amp; audit trail</b><span>Every action is recorded for transparency.</span></div></li>';
+    echo '</ul></div>';
+    echo '<p class="lg-side-foot">' . e(app_config()['school_name']) . '</p>';
+    echo '</aside>';
+    echo '<main class="lg-main"><div class="lg-card">';
     $content();
-    echo '</div></div></div>';
+    echo '</div>';
+    echo '<a class="lg-back" href="' . e(base_url('index.php')) . '"><i data-lucide="arrow-left"></i> Back to scholarship programs</a>';
+    echo '</main></div>';
     render_foot();
+    unset($GLOBALS['page_assets']);
 }
