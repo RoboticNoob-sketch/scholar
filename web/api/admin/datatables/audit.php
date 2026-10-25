@@ -20,7 +20,7 @@ foreach ($result['rows'] as $row) {
     $badge = in_array($row['action'], $failureActions, true) ? 'badge-negative' : 'badge-accent';
     $data[] = [
         e(format_datetime($row['created_at'])),
-        e($row['username'] ?? 'System'),
+        '<span title="' . e($row['username'] ?? '') . '">' . e($row['display_name'] ?? 'System') . '</span>',
         '<span class="badge ' . $badge . '">' . e(str_replace('_', ' ', $row['action'])) . '</span>',
         e($row['details'] ?? ($row['entity_type'] . ' #' . $row['entity_id'])),
         e($row['ip_address'] ?? '—'),

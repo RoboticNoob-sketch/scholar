@@ -122,7 +122,7 @@ final class DashboardQueries
     public static function recentActivity(PDO $pdo, int $limit = 8): array
     {
         $stmt = $pdo->prepare(
-            'SELECT a.*, u.username
+            'SELECT a.*, u.username, ' . AuditQueries::displayNameSql() . '
              FROM audit_logs a
              LEFT JOIN users u ON u.id = a.user_id
              WHERE (u.is_system IS NULL OR u.is_system = 0 OR u.id = ' . (int) ($_SESSION['user_id'] ?? 0) . ')

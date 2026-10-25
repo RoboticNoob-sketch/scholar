@@ -177,7 +177,7 @@
     <?php foreach ($activity as $item): ?>
       <div class="activity-item">
         <div class="activity-top">
-          <span class="activity-who"><?= e($item['username'] ?? 'System') ?></span>
+          <span class="activity-who" title="<?= e($item['username'] ?? '') ?>"><?= e($item['display_name'] ?? 'System') ?></span>
           <span class="badge <?= str_contains($item['action'], 'failed') || str_contains($item['action'], 'rejected') ? 'badge-negative' : 'badge-accent' ?>"><?= e(str_replace('_', ' ', $item['action'])) ?></span>
         </div>
         <div class="activity-meta">

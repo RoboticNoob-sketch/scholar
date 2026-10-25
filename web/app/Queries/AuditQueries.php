@@ -82,8 +82,11 @@ final class AuditQueries
         if (strtolower($user) === 'system') {
             $sql .= ' AND a.user_id IS NULL';
         } elseif ($user !== '') {
-            $sql .= ' AND u.username LIKE ?';
-            $params[] = '%' . addcslashes($user, '%_\\') . '%';
+            $like = '%' . addcslashes($user, '%_\\') . '%';
+            $sql .= ' AND (u.username LIKE ?
+                OR EXISTS (SELECT 1 FROM scholars sc WHERE sc.user_id = u.id AND CONCAT(sc.first_name, " ", sc.last_name) LIKE ?)
+                OR EXISTS (SELECT 1 FROM scholarship_applications ap WHERE ap.applicant_user_id = u.id AND CONCAT(ap.first_name, " ", ap.last_name) LIKE ?))';
+            array_push($params, $like, $like, $like);
         }
 
         $from = self::validDate((string) ($filters['date_from'] ?? ''));
@@ -142,9 +145,19 @@ final class AuditQueries
         ];
     }
 
+    /** SQL for a human-readable actor name: scholar name, else application name, else username. */
+    public static function displayNameSql(): string
+    {
+        return 'COALESCE(
+                    (SELECT NULLIF(TRIM(CONCAT(sc.first_name, " ", sc.last_name)), "") FROM scholars sc WHERE sc.user_id = u.id LIMIT 1),
+                    (SELECT NULLIF(TRIM(CONCAT(ap.first_name, " ", ap.last_name)), "") FROM scholarship_applications ap WHERE ap.applicant_user_id = u.id ORDER BY ap.id DESC LIMIT 1),
+                    u.username
+                ) AS display_name';
+    }
+
     public static function baseSql(): string
     {
-        return 'SELECT a.*, u.username
+        return 'SELECT a.*, u.username, ' . self::displayNameSql() . '
                 FROM audit_logs a
                 LEFT JOIN users u ON u.id = a.user_id
                 WHERE 1=1';
