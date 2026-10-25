@@ -68,7 +68,8 @@ final class BatchVoucherPrintController
                 echo '<article class="print-voucher">';
                 echo '<header class="print-voucher-head">';
                 echo '<img src="' . e(school_logo_url()) . '" alt="" class="print-voucher-logo">';
-                echo '<div class="print-voucher-brand"><strong>Scholarly</strong><span>Scholarship assistance</span></div>';
+                echo '<img src="' . e(asset_url('assets/images/sk-cabay-logo.png')) . '" alt="" class="print-voucher-logo">';
+                echo '<div class="print-voucher-brand"><strong>Scholarly</strong><span>SK Cabay · Scholarship assistance</span></div>';
                 echo '<span class="print-voucher-type">OFFICE CLAIM</span>';
                 echo '</header>';
                 echo '<div class="print-voucher-body">';
