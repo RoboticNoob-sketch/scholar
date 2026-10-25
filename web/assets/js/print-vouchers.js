@@ -30,8 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   printButton.disabled = false;
-  const voucherLabel = qrNodes.length === 1 ? 'voucher' : 'vouchers';
-  printButton.innerHTML = '<i data-lucide="printer"></i> Print ' + qrNodes.length + ' ' + voucherLabel;
+  const ticketCount = document.querySelectorAll('.print-voucher').length;
+  const voucherLabel = ticketCount === 1 ? 'voucher' : 'vouchers';
+  printButton.innerHTML = '<i data-lucide="printer"></i> Print ' + ticketCount + ' ' + voucherLabel;
   window.lucide?.createIcons();
   printButton.addEventListener('click', () => window.print());
 });
