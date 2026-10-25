@@ -54,9 +54,44 @@
       }
     }
 
-    select.addEventListener('change', function () { sync(true); });
+    select.addEventListener('change', function () {
+      sync(true);
+      markQuick();
+    });
+
+    var quick = form.querySelectorAll('[data-quick-decision]');
+    function markQuick() {
+      quick.forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-quick-decision') === select.value); });
+    }
+    quick.forEach(function (b) {
+      b.addEventListener('click', function () {
+        select.value = b.getAttribute('data-quick-decision');
+        select.dispatchEvent(new Event('change'));
+        var target = select.value === 'approved' ? input : note;
+        if (target) target.focus();
+      });
+    });
+    markQuick();
     sync(false);
   }
 
   document.querySelectorAll('.application-review-form').forEach(init);
+
+  // Review opens as a dialog: one open at a time, closes with X, backdrop click or Escape.
+  var rows = document.querySelectorAll('details.application-row-review');
+  function closeAll() { rows.forEach(function (d) { d.removeAttribute('open'); }); document.body.classList.remove('review-open'); }
+  rows.forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (d.open) {
+        rows.forEach(function (o) { if (o !== d) o.removeAttribute('open'); });
+        document.body.classList.add('review-open');
+      } else if (!document.querySelector('details.application-row-review[open]')) {
+        document.body.classList.remove('review-open');
+      }
+    });
+    d.addEventListener('click', function (e) {
+      if (e.target.closest('[data-review-close]') || e.target === d) closeAll();
+    });
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
 })();

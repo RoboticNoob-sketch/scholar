@@ -288,3 +288,29 @@
 .application-review-doc-missing { display: grid; place-items: center; font-size: 12px; color: var(--muted, #9aa59a); }
 .application-review-main { display: grid; gap: 12px; min-width: 0; }
 @media (max-width: 900px) { .application-row-review-panel:has(.application-review-docs) { grid-template-columns: 1fr; width: min(430px, calc(100vw - 70px)); } .application-review-docs { grid-template-columns: 1fr; } }
+
+/* Review dialog */
+body.review-open { overflow: hidden; }
+details.application-row-review[open] { position: static; }
+details.application-row-review[open]::before { content: ""; position: fixed; inset: 0; z-index: 900; background: rgba(0, 0, 0, .72); }
+details.application-row-review[open] > .application-row-review-panel { position: fixed; z-index: 901; inset: 4vh 3vw; width: auto; margin: 0; padding: 0; overflow: auto; grid-template-columns: minmax(0, 1.5fr) minmax(340px, 1fr); grid-template-rows: auto 1fr; gap: 0; align-items: stretch; background: var(--surface-card); }
+.application-review-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 2; background: var(--surface-card); }
+.application-review-head > div { display: grid; gap: 2px; margin-right: auto; }
+.application-review-head strong { font-size: 16px; }
+.application-review-head span { font-size: 12px; color: var(--muted, #9aa59a); }
+.application-review-close { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border-light); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+details.application-row-review[open] .application-review-docs { padding: 16px 18px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-content: start; }
+details.application-row-review[open] .application-review-docs img, details.application-row-review[open] .application-review-docs iframe, details.application-row-review[open] .application-review-doc-missing { height: calc(92vh - 150px); min-height: 320px; }
+details.application-row-review[open] .application-review-main { padding: 16px 18px; border-left: 1px solid var(--border-light); align-content: start; }
+.application-review-docs figcaption { display: flex; justify-content: space-between; align-items: center; }
+.application-review-docs figcaption a { color: var(--accent); text-transform: none; letter-spacing: 0; }
+.application-quick-decisions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.application-quick-decisions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 6px; border: 1px solid var(--border-light); border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.application-quick-decisions button svg { width: 15px; height: 15px; }
+.application-quick-decisions button.is-active { border-color: var(--accent); color: var(--accent); background: rgba(160, 230, 90, .1); }
+@media (max-width: 900px) {
+  details.application-row-review[open] > .application-row-review-panel { inset: 0; grid-template-columns: 1fr; }
+  details.application-row-review[open] .application-review-docs { grid-template-columns: 1fr; }
+  details.application-row-review[open] .application-review-docs img, details.application-row-review[open] .application-review-docs iframe, details.application-row-review[open] .application-review-doc-missing { height: 60vh; }
+  details.application-row-review[open] .application-review-main { border-left: 0; }
+}

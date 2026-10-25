@@ -49,19 +49,24 @@ $statusOptions = ['' => 'All statuses'] + $statusLabels;
                   <details class="application-row-review">
                     <summary><i data-lucide="clipboard-list"></i> Review</summary>
                     <div class="application-row-review-panel">
+                      <header class="application-review-head">
+                        <div><strong><?= e($application['first_name'] . ' ' . $application['last_name']) ?></strong><span><?= e($application['email']) ?> &middot; Submitted <?= e(format_datetime($application['created_at'])) ?></span></div>
+                        <span class="application-review-status application-review-status-<?= e($application['status']) ?>"><?= e($statusLabels[$application['status']] ?? $application['status']) ?></span>
+                        <button type="button" class="application-review-close" data-review-close aria-label="Close review"><i data-lucide="x"></i></button>
+                      </header>
                       <?php
                         $docUrl = static fn (string $doc): string => base_url('admin/application-document.php?id=' . (int) $application['id'] . '&document=' . $doc);
                         $formIsPdf = str_ends_with(strtolower((string) $application['enrollment_form_path']), '.pdf');
                       ?>
                       <div class="application-review-docs">
                         <figure>
-                          <figcaption>2x2 photo / ID</figcaption>
+                          <figcaption><span>2x2 photo / ID</span><?php if (!empty($application['photo_2x2_path'])): ?><a href="<?= e($docUrl('photo_2x2')) ?>" target="_blank" rel="noopener">Open full size</a><?php endif; ?></figcaption>
                           <?php if (!empty($application['photo_2x2_path'])): ?>
                             <a href="<?= e($docUrl('photo_2x2')) ?>" target="_blank" rel="noopener"><img loading="lazy" alt="2x2 photo of <?= e($application['full_name'] ?? 'student') ?>" src="<?= e($docUrl('photo_2x2')) ?>"></a>
                           <?php else: ?><div class="application-review-doc-missing">Not uploaded</div><?php endif; ?>
                         </figure>
                         <figure>
-                          <figcaption>Enrollment form</figcaption>
+                          <figcaption><span>Enrollment form</span><?php if (!empty($application['enrollment_form_path'])): ?><a href="<?= e($docUrl('enrollment_form')) ?>" target="_blank" rel="noopener">Open full size</a><?php endif; ?></figcaption>
                           <?php if (empty($application['enrollment_form_path'])): ?>
                             <div class="application-review-doc-missing">Not uploaded</div>
                           <?php elseif ($formIsPdf): ?>
@@ -84,6 +89,11 @@ $statusOptions = ['' => 'All statuses'] + $statusLabels;
                       <?php endif; ?>
                       <form method="post" class="application-review-form">
                         <?= csrf_field() ?><input type="hidden" name="application_id" value="<?= (int) $application['id'] ?>">
+                        <div class="application-quick-decisions" role="group" aria-label="Quick decision">
+                          <button type="button" data-quick-decision="approved"><i data-lucide="check-circle-2"></i> Approve</button>
+                          <button type="button" data-quick-decision="needs_info"><i data-lucide="message-circle-question"></i> Request info</button>
+                          <button type="button" data-quick-decision="declined"><i data-lucide="x-circle"></i> Decline</button>
+                        </div>
                         <label><span>Decision</span><select name="status" required><?php foreach (['under_review' => 'Keep in review', 'needs_info' => 'Request information', 'approved' => 'Approve and create scholar profile', 'declined' => 'Decline registration'] as $value => $label): ?><option value="<?= e($value) ?>" <?= $application['status'] === $value ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?></select></label>
                         <label data-student-no-field hidden><span>Official student number <small>Required when approving</small></span><input name="student_no" maxlength="32" placeholder="Enter the official student number"></label>
                         <label><span>Note to student / internal note <small data-note-hint></small></span><textarea name="review_note" rows="3" maxlength="1000" placeholder="Required when requesting information" data-review-note><?= e($application['review_note'] ?? '') ?></textarea></label>
