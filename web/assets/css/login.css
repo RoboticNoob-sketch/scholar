@@ -34,7 +34,7 @@
 .lg-input { display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 52px; border-radius: 14px; border: 1px solid var(--border-default, #3a4a40); background: #0d1210; transition: border-color .2s, box-shadow .2s; }
 .lg-input:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(168, 230, 107, .14); }
 .lg-input > svg { color: var(--text-secondary, #9aa89f); }
-.lg-input input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: 0; color: #fff; font: inherit; font-size: .98rem; }
+.lg .lg-input input, .lg .lg-input input:focus, .lg .lg-input input:focus-visible { flex: 1; min-width: 0; height: 100%; padding: 0; background: transparent; border: 0; border-radius: 0; outline: 0; box-shadow: none; color: #fff; font: inherit; font-size: .98rem; }
 .lg-input input::placeholder { color: #66756b; }
 .lg-input input:-webkit-autofill { -webkit-text-fill-color: #fff; box-shadow: 0 0 0 40px #0d1210 inset; }
 .lg-eye { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 10px; background: transparent; color: var(--text-secondary, #9aa89f); cursor: pointer; }
