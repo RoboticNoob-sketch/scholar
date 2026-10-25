@@ -233,7 +233,13 @@ function generate_missing_vouchers_for_batch(PDO $pdo, int $batchId): int
             'SELECT e.scholar_id, p.amount FROM enrollments e
              JOIN scholarship_programs p ON p.id = e.program_id
              WHERE e.program_id = ? AND e.status = "active"
-             AND NOT EXISTS (SELECT 1 FROM claim_vouchers v WHERE v.batch_id = ? AND v.scholar_id = e.scholar_id)'
+             AND NOT EXISTS (SELECT 1 FROM claim_vouchers v WHERE v.batch_id = ? AND v.scholar_id = e.scholar_id)
+             AND NOT EXISTS (
+                 SELECT 1 FROM claim_vouchers v2
+                 JOIN distribution_batches b2 ON b2.id = v2.batch_id
+                 WHERE b2.program_id = e.program_id AND v2.scholar_id = e.scholar_id
+                   AND v2.status IN ("pending", "claimed")
+             )'
         );
         $stmt->execute([(int) $batchRow['program_id'], $batchId]);
         $eligibleScholars = $stmt->fetchAll() ?: [];
@@ -274,7 +280,7 @@ function generate_missing_vouchers_for_batch(PDO $pdo, int $batchId): int
 function sync_vouchers_for_program(PDO $pdo, int $programId): int
 {
     $batches = $pdo->prepare(
-        'SELECT id FROM distribution_batches WHERE program_id = ? AND status IN ("draft", "open")'
+        'SELECT id FROM distribution_batches WHERE program_id = ? AND status IN ("draft", "open") ORDER BY id'
     );
     $batches->execute([$programId]);
 
