@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/page_header.dart';
+import '../utils/application_updates.dart';
 
 class ApplicationScreen extends StatefulWidget {
   const ApplicationScreen({super.key, required this.isVisible, required this.onUnreadChanged});
@@ -37,6 +38,8 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
   PlatformFile? _photo;
   PlatformFile? _enrollmentForm;
   bool _loading = true;
+  bool _newSession = true;
+  int _highlightAfter = -1;
   bool _saving = false;
   bool _privacyAcknowledged = false;
   bool _showForm = false;
@@ -53,7 +56,10 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
   @override
   void didUpdateWidget(covariant ApplicationScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!oldWidget.isVisible && widget.isVisible) _load();
+    if (!oldWidget.isVisible && widget.isVisible) {
+      _newSession = true;
+      _load();
+    }
   }
 
   @override
@@ -87,8 +93,14 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
           .map((event) => Map<String, dynamic>.from(event))
           .toList();
       setState(() => _data = {...response, 'updates': updates});
-      final latestId = updates.fold<int>(0, (maxId, event) => _intValue(event['id']) > maxId ? _intValue(event['id']) : maxId);
+      final latestId = latestUpdateId(updates);
       final lastRead = await SessionService.getLastApplicationUpdateId();
+      // Remember what was unread when the tab was opened so it stays highlighted until the user leaves.
+      if (_newSession && widget.isVisible) {
+        _newSession = false;
+        final highlightAfter = lastRead ?? latestId;
+        if (mounted) setState(() => _highlightAfter = highlightAfter);
+      }
       if (lastRead == null) {
         await SessionService.saveLastApplicationUpdateId(widget.isVisible ? latestId : 0);
         widget.onUnreadChanged(widget.isVisible ? 0 : updates.length);
@@ -247,6 +259,7 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
             EmptyState(message: _error!, icon: Icons.cloud_off_outlined)
           else ...[
             if (_error != null) _messageBanner(_error!, AppTheme.negative, Icons.error_outline),
+            if (_newUpdateCount(updates) > 0) _newUpdatesBanner(updates),
             if (applications.isEmpty)
               _emptyApplicationState()
             else ...applications.map(_applicationCard),
@@ -421,49 +434,52 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     final status = update['status']?.toString();
     final reviewed = action == 'application_reviewed';
     final converted = action == 'application_converted_to_scholar';
-    final title = converted
-        ? 'Scholar profile created'
-        : reviewed
-            ? _statusTitle(status ?? 'under_review')
-            : action == 'application_resubmitted'
-                ? 'Updated registration submitted'
-                : 'Registration received';
-    final subtitle = converted
-        ? 'Program assignment and funding approval are handled separately.'
-        : reviewed
-            ? (status == 'needs_info'
-                ? 'Open your registration above and review the scholarship office note.'
-                : 'Your registration status was updated by the scholarship office.')
-            : action == 'application_resubmitted'
-                ? 'Your requested changes have been sent for review.'
-                : 'Your registration is in the scholarship office queue.';
+    final text = describeApplicationUpdate(update);
+    final isNew = _isNewUpdate(update);
     final color = converted ? AppTheme.accent : (status == 'declined' ? AppTheme.negative : AppTheme.textSecondary);
 
-    return AppCard(
+    return Container(
       margin: const EdgeInsets.only(bottom: 9),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(converted ? Icons.school_outlined : (reviewed ? Icons.mark_email_read_outlined : Icons.receipt_long_outlined), color: color, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                const SizedBox(height: 3),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.4)),
-                const SizedBox(height: 5),
-                Text(_formatDate(update['created_at']), style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary)),
-              ],
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: isNew ? [BoxShadow(color: AppTheme.accent.withValues(alpha: 0.18), blurRadius: 14)] : null,
+        border: isNew ? Border.all(color: AppTheme.accent.withValues(alpha: 0.7)) : null,
+      ),
+      child: AppCard(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(converted ? Icons.school_outlined : (reviewed ? Icons.mark_email_read_outlined : Icons.receipt_long_outlined),
+                color: isNew ? AppTheme.accent : color, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: Text(text.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
+                      if (isNew)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(color: AppTheme.accent, borderRadius: BorderRadius.circular(99)),
+                          child: const Text('NEW', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.black)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(text.subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.4)),
+                  const SizedBox(height: 5),
+                  Text(_formatDate(update['created_at']), style: const TextStyle(fontSize: 10, color: AppTheme.textTertiary)),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-
   Widget _applicationForm() {
     final isEditing = _editing != null;
     return AppCard(
@@ -677,14 +693,7 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     );
   }
 
-  String _statusTitle(String status) => switch (status) {
-        'submitted' => 'Submitted',
-        'under_review' => 'Under review',
-        'needs_info' => 'More information needed',
-        'approved' => 'Approved',
-        'declined' => 'Not selected',
-        _ => status,
-      };
+  String _statusTitle(String status) => applicationStatusTitle(status);
 
   Color _statusColor(String status) => switch (status) {
         'needs_info' => AppTheme.warning,
@@ -698,8 +707,26 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     final parsed = DateTime.tryParse(value?.toString() ?? '');
     if (parsed == null) return 'Recently';
     final date = parsed.toLocal();
-    return '${date.month}/${date.day}/${date.year} · ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.month}/${date.day}/${date.year} Â· ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  int _intValue(Object? value) => value is int ? value : int.tryParse(value?.toString() ?? '') ?? 0;
+  int _intValue(Object? value) => updateId(value);
+
+  bool _isNewUpdate(Map<String, dynamic> update) => _highlightAfter >= 0 && _intValue(update['id']) > _highlightAfter;
+
+  int _newUpdateCount(List<Map<String, dynamic>> updates) => updates.where(_isNewUpdate).length;
+
+  Widget _newUpdatesBanner(List<Map<String, dynamic>> updates) {
+    final count = _newUpdateCount(updates);
+    final newest = updates.where(_isNewUpdate).reduce((a, b) => _intValue(a['id']) >= _intValue(b['id']) ? a : b);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: _messageBanner(
+        '${describeApplicationUpdate(newest).title}. Scroll down to Updates for details.',
+        AppTheme.accent,
+        Icons.notifications_active_outlined,
+        heading: count == 1 ? '1 new update from the scholarship office' : '$count new updates from the scholarship office',
+      ),
+    );
+  }
 }

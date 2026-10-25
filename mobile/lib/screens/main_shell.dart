@@ -1,9 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'home_screen.dart';
 import 'qr_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 import 'application_screen.dart';
+import '../services/api_service.dart';
+import '../services/session_service.dart';
+import '../theme/app_theme.dart';
+import '../utils/application_updates.dart';
 import '../widgets/app_nav_shell.dart';
 
 class MainShell extends StatefulWidget {
@@ -16,16 +23,117 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
+  static const _pollInterval = Duration(seconds: 45);
+
   int _index = 0;
   int? _qrVoucherId;
   int _unreadApplicationUpdates = 0;
+  String? _latestUpdateTitle;
+  bool _bannerDismissed = false;
+  bool _checking = false;
+  Timer? _poller;
   late bool _hasScholar;
+
+  int get _applicationIndex => _hasScholar ? 3 : 0;
 
   @override
   void initState() {
     super.initState();
     _hasScholar = widget.hasScholar;
+    WidgetsBinding.instance.addObserver(this);
+    _poller = Timer.periodic(_pollInterval, (_) => _checkForUpdates());
+    _checkForUpdates();
+  }
+
+  @override
+  void dispose() {
+    _poller?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkForUpdates();
+  }
+
+  // The Progress tab is only built while selected, so unread updates are checked here instead.
+  Future<void> _checkForUpdates() async {
+    if (_checking || !mounted || _index == _applicationIndex) return;
+    _checking = true;
+    try {
+      final response = await ApiService.getApplications();
+      if (!mounted || response['success'] != true || _index == _applicationIndex) return;
+      final updates = (response['updates'] as List? ?? const [])
+          .whereType<Map>()
+          .map((event) => Map<String, dynamic>.from(event))
+          .toList();
+      final lastRead = await SessionService.getLastApplicationUpdateId() ?? 0;
+      final unread = updates.where((event) => updateId(event['id']) > lastRead).toList();
+      final newest = unread.isEmpty ? null : unread.reduce((a, b) => updateId(a['id']) >= updateId(b['id']) ? a : b);
+      if (!mounted) return;
+      final increased = unread.length > _unreadApplicationUpdates;
+      setState(() {
+        _unreadApplicationUpdates = unread.length;
+        _latestUpdateTitle = newest == null ? null : describeApplicationUpdate(newest).title;
+        if (increased) _bannerDismissed = false;
+      });
+      if (increased) HapticFeedback.mediumImpact();
+    } catch (_) {
+      // Offline or server error: try again on the next poll.
+    } finally {
+      _checking = false;
+    }
+  }
+
+  void _openProgress() => setState(() => _index = _applicationIndex);
+
+  Widget _updateBanner() {
+    final count = _unreadApplicationUpdates;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Material(
+        color: AppTheme.accent.withValues(alpha: 0.12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: AppTheme.accent.withValues(alpha: 0.5)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: _openProgress,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+            child: Row(
+              children: [
+                const Icon(Icons.notifications_active_outlined, color: AppTheme.accent, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        count == 1 ? 'New update on your application' : '$count new updates on your application',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                      if (_latestUpdateTitle != null)
+                        Text(_latestUpdateTitle!, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                ),
+                const Text('VIEW', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.accent)),
+                IconButton(
+                  tooltip: 'Dismiss',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => setState(() => _bannerDismissed = true),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -97,7 +205,10 @@ class _MainShellState extends State<MainShell> {
 
     return AppNavShell(
       selectedIndex: _index,
-      onDestinationSelected: (i) => setState(() => _index = i),
+      onDestinationSelected: (i) {
+        setState(() => _index = i);
+        if (i != _applicationIndex) _checkForUpdates();
+      },
       destinations: _hasScholar
           ? [
               const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
@@ -110,7 +221,12 @@ class _MainShellState extends State<MainShell> {
               progressDestination,
               const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
             ],
-      body: pages[_index],
+      body: Column(
+        children: [
+          if (_unreadApplicationUpdates > 0 && !_bannerDismissed && _index != applicationIndex) _updateBanner(),
+          Expanded(child: pages[_index]),
+        ],
+      ),
     );
   }
 }
