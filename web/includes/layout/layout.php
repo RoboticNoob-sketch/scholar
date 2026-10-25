@@ -53,11 +53,21 @@ function render_head(string $title): void
     foreach ($assets as $asset) {
         echo '  <link rel="stylesheet" href="' . e(asset_url($asset)) . "\">\n";
     }
+    if (!empty(page_assets()['public'])) {
+        echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/public.css')) . "\">\n";
+    }
+    if (!empty(page_assets()['applications'])) {
+        echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/applications.css')) . "\">\n";
+    }
+    if (!empty(page_assets()['scholar_profile'])) {
+        echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/scholar-profile.css')) . "\">\n";
+    }
     if (page_uses_datatables()) {
         echo '  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">' . "\n";
         echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/datatables-theme.css')) . "\">\n";
     }
-    echo "</head>\n<body>\n";
+    $bodyClass = !empty(page_assets()['public']) ? ' class="public-body"' : '';
+    echo "</head>\n<body{$bodyClass}>\n";
 }
 
 function render_foot(): void
@@ -73,6 +83,15 @@ function render_foot(): void
     }
     echo '<script src="' . e(asset_url('assets/js/app.js')) . '"></script>' . "\n";
     echo "</body></html>\n";
+}
+
+function render_public_layout(string $title, callable $content): void
+{
+    $GLOBALS['page_assets'] = ['public' => true];
+    render_head($title);
+    $content();
+    render_foot();
+    unset($GLOBALS['page_assets']);
 }
 
 function render_flash(): void
@@ -133,6 +152,7 @@ function render_admin_layout(PDO $pdo, string $active, string $title, callable $
     $nav = [
         'dashboard' => ['Dashboard', 'admin/dashboard.php', 'layout-dashboard'],
         'scholars' => ['Scholars', 'admin/scholars.php', 'users'],
+        'applications' => ['Applications', 'admin/applications.php', 'file-check-2'],
         'users' => ['Users', 'admin/users.php', 'user-cog'],
         'requests' => ['My Requests', 'admin/requests.php', 'send'],
         'programs' => ['Programs', 'admin/programs.php', 'graduation-cap'],

@@ -1,7 +1,6 @@
 <div class="breadcrumb">Admin / Scholars</div>
 <div class="page-header">
   <h1 class="page-title">Scholars</h1>
-  <a class="btn btn-primary btn-sm" href="<?= e(base_url('admin/scholar-form.php')) ?>">ADD SCHOLAR</a>
 </div>
 
 <form class="filter-bar" id="scholar-filters" method="get">

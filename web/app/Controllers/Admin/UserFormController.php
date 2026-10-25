@@ -163,7 +163,7 @@ final class UserFormController
                 echo '<i data-lucide="link"></i><span>Linked scholar: ' . e($scholar['student_no'] . ' · ' . scholar_full_name($scholar));
                 echo ' · <a class="link-action" href="' . base_url('admin/scholar-view.php?id=' . (int) $scholar['id']) . '">View profile</a></span></div>';
             } elseif ($user && $user['role'] === 'student') {
-                echo '<div class="alert-error" style="margin-bottom:16px;"><i data-lucide="alert-circle"></i><span>This student account has no linked scholar record. Create one from <a class="link-action" href="' . base_url('admin/scholar-form.php') . '">Add Scholar</a>.</span></div>';
+                echo '<div class="alert-error" style="margin-bottom:16px;"><i data-lucide="alert-circle"></i><span>This student account has no scholar profile. New profiles are created by approving a registration in <a class="link-action" href="' . base_url('admin/applications.php') . '">Applications</a>.</span></div>';
             }
 
             echo '<form method="post" class="card form-grid form-narrow">';

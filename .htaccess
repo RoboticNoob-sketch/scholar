@@ -4,6 +4,10 @@ DirectoryIndex index.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Application KYC files are private and are served only through an authorized PHP endpoint.
+    RewriteRule ^private/ - [F,L]
+    RewriteRule ^web/assets/uploads/scholars/ - [F,L]
+
     # Block source folders and git metadata from the web
     RewriteRule ^(database|mobile|deploy|docs|scripts)/ - [F,L]
     RewriteRule ^\.git - [F,L]

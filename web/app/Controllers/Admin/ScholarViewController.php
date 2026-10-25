@@ -30,47 +30,62 @@ $history = $pdo->prepare(
 );
 $history->execute([$id]);
 $claims = $history->fetchAll();
+$programQuery = $pdo->prepare(
+    'SELECT p.name, p.amount, p.semester, p.academic_year
+     FROM enrollments e JOIN scholarship_programs p ON p.id = e.program_id
+     WHERE e.scholar_id = ? AND e.status = "active"
+     ORDER BY p.academic_year DESC, p.semester, p.name'
+);
+$programQuery->execute([$id]);
+$programs = $programQuery->fetchAll();
 
 $qrPayload = profile_qr_payload($scholar);
 $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrPayload);
 
-render_admin_layout($pdo, 'scholars', scholar_full_name($scholar), function () use ($scholar, $claims, $qrUrl, $qrPayload): void {
-    echo '<div class="breadcrumb">Admin / Scholars / ' . e(scholar_full_name($scholar)) . '</div>';
-    echo '<div class="page-header"><h1 class="page-title">' . e(scholar_full_name($scholar)) . '</h1>';
-    echo '<div class="table-actions">';
-    echo '<a class="btn btn-outline btn-sm" href="' . base_url('admin/scholar-form.php?id=' . (int) $scholar['id']) . '">EDIT SCHOLAR</a>';
-    echo '</div></div>';
+$GLOBALS['page_assets'] = ['scholar_profile' => true];
+render_admin_layout($pdo, 'scholars', scholar_full_name($scholar), function () use ($scholar, $claims, $programs, $qrUrl, $qrPayload): void {
+    $fullName = scholar_full_name($scholar);
+    $initials = strtoupper(substr((string) $scholar['first_name'], 0, 1) . substr((string) $scholar['last_name'], 0, 1));
+    echo '<div class="breadcrumb">Admin / Scholars / Profile</div>';
+    echo '<div class="scholar-view-heading"><div><div class="eyebrow">SCHOLAR PROFILE</div><h1 class="page-title">' . e($fullName) . '</h1><p>Student record and distribution activity</p></div>';
+    echo '<div class="table-actions"><a class="btn btn-outline btn-sm" href="' . e(base_url('admin/scholars.php')) . '"><i data-lucide="arrow-left"></i> BACK TO SCHOLARS</a>';
+    echo '<a class="btn btn-primary btn-sm" href="' . e(base_url('admin/scholar-form.php?id=' . (int) $scholar['id'])) . '"><i data-lucide="pencil"></i> EDIT PROFILE</a></div></div>';
 
-    echo '<div class="detail-grid">';
-    echo '<div class="stack">';
-    echo '<div class="card"><div class="card-title">Profile</div>';
     $photoUrl = scholar_photo_url($scholar['photo_path'] ?? null, (int) $scholar['id']);
     $photoFile = ($scholar['photo_path'] ?? '') !== ''
         ? scholar_uploads_dir() . '/' . basename((string) $scholar['photo_path'])
         : null;
-    echo '<div class="scholar-profile-head">';
+    echo '<section class="card scholar-identity-card"><div class="scholar-identity-avatar">';
     if ($photoUrl) {
-        echo '<div class="scholar-avatar-wrap"><img class="photo-preview scholar-avatar" src="' . e($photoUrl) . '" alt="' . e(scholar_full_name($scholar)) . '" width="96" height="96" onerror="this.closest(\'.scholar-avatar-wrap\')?.remove()"></div>';
+        echo '<img src="' . e($photoUrl) . '" alt="' . e($fullName) . '" width="92" height="92">';
+    } else {
+        echo '<span>' . e($initials !== '' ? $initials : '?') . '</span>';
     }
-    echo '<div class="scholar-profile-meta">';
-    echo '<div class="scholar-profile-name">' . e(scholar_full_name($scholar)) . '</div>';
-    echo '<span class="badge ' . badge_class($scholar['status']) . '">' . e($scholar['status']) . '</span>';
-    echo '</div></div>';
+    echo '</div><div class="scholar-identity-main"><div class="scholar-identity-name">' . e($fullName) . '<span class="badge ' . badge_class($scholar['status']) . '">' . e($scholar['status']) . '</span></div>';
+    echo '<div class="scholar-identity-number">STUDENT NO. <strong>' . e($scholar['student_no']) . '</strong></div>';
+    echo '<div class="scholar-identity-facts">';
+    $courseYear = trim(($scholar['course'] ?? '') . ' · ' . ($scholar['year_level'] ?? ''), ' ·');
+    foreach (['Course / year' => $courseYear, 'Email' => $scholar['email'] ?: '—', 'Phone' => $scholar['phone'] ?: '—'] as $label => $value) {
+        echo '<div><span>' . e($label) . '</span><strong>' . e($value) . '</strong></div>';
+    }
+    echo '</div></div></section>';
+
     if ($photoFile && !is_file($photoFile)) {
         echo '<div class="alert-error" style="margin-bottom:16px"><i data-lucide="alert-circle"></i><span>Photo file missing on server. Edit scholar and upload the photo again.</span></div>';
     }
-    $fields = [
-        'Student No.' => $scholar['student_no'],
-        'Course & Year' => trim(($scholar['course'] ?? '') . ', ' . ($scholar['year_level'] ?? ''), ', '),
-        'Contact' => $scholar['email'] ?: '—',
-        'Phone' => $scholar['phone'] ?: '—',
-    ];
-    foreach ($fields as $label => $value) {
-        echo '<div class="stat-row"><span>' . e($label) . '</span><span>' . e($value) . '</span></div>';
-    }
-    echo '</div>';
 
-    echo '<div class="card"><div class="card-title">Voucher & Claim History</div>';
+    echo '<div class="scholar-detail-grid"><div class="stack">';
+    echo '<section class="card scholar-program-card"><div class="scholar-section-heading"><div><div class="eyebrow">ELIGIBILITY</div><h2>Program assignments</h2></div><span class="scholar-section-count">' . count($programs) . '</span></div>';
+    if (!$programs) {
+        echo '<div class="empty-state"><i data-lucide="graduation-cap"></i><div>No program assigned yet. The SK office can request an assignment when an active program is appropriate.</div></div>';
+    } else {
+        foreach ($programs as $program) {
+            echo '<div class="scholar-program-row"><div><strong>' . e($program['name']) . '</strong><span>' . e($program['semester']) . ' | ' . e($program['academic_year']) . '</span></div><div class="scholar-program-amount">' . e(format_money((float) $program['amount'])) . '<small>per scholar</small></div></div>';
+        }
+    }
+    echo '</section>';
+
+    echo '<section class="card scholar-claims-card"><div class="scholar-section-heading"><div><div class="eyebrow">DISTRIBUTION</div><h2>Voucher & claim history</h2></div><span class="scholar-section-count">' . count($claims) . '</span></div>';
     if (!$claims) {
         echo '<div class="empty-state">No vouchers generated yet.</div>';
     }
@@ -84,15 +99,16 @@ render_admin_layout($pdo, 'scholars', scholar_full_name($scholar), function () u
         }
         echo '</div></div>';
     }
-    echo '</div></div>';
+    echo '</section></div>';
 
-    echo '<div class="card qr-card">';
-    echo '<div class="card-title">Scholar Profile QR</div>';
-    echo '<div class="qr-preview"><img src="' . e($qrUrl) . '" alt="Profile QR"></div>';
-    echo '<div class="qr-caption">For identity verification at distribution</div>';
-    echo '<div class="qr-payload">' . e($qrPayload) . '</div>';
-    echo '</div></div>';
+    echo '<aside class="card scholar-qr-card"><div class="eyebrow">IDENTITY CHECK</div><h2>Scholar QR</h2>';
+    echo '<div class="qr-preview"><img src="' . e($qrUrl) . '" alt="Scholar identity QR"></div>';
+    echo '<p class="qr-caption">Show this code to staff for identity verification.</p>';
+    echo '<div class="scholar-public-id"><span>PUBLIC ID</span><strong>' . e($scholar['public_id']) . '</strong></div>';
+    echo '<details class="scholar-qr-payload"><summary>View QR payload</summary><code>' . e($qrPayload) . '</code></details>';
+    echo '</aside></div>';
 });
+unset($GLOBALS['page_assets']);
 
     }
 }

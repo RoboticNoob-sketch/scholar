@@ -39,7 +39,7 @@ class _ScholarAvatarState extends State<ScholarAvatar> {
     return CircleAvatar(
       radius: widget.radius,
       backgroundColor: AppTheme.elevated,
-      backgroundImage: showImage ? NetworkImage(resolved) : null,
+      backgroundImage: showImage ? NetworkImage(resolved, headers: ApiService.mediaHeaders) : null,
       onBackgroundImageError: showImage
           ? (_, __) {
               if (mounted) setState(() => _loadFailed = true);

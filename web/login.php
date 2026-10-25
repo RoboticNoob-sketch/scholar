@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user && password_verify($password, $user['password_hash'])) {
         if ($user['role'] === 'student') {
-            $error = 'Students should use the Scholarly mobile app to log in.';
+            $error = 'Students use Google sign-in from the public programs page for applications, and the mobile app for voucher claims.';
         } else {
             login_user($user);
             audit_log($pdo, (int) $user['id'], 'login', 'user', (int) $user['id'], 'User logged in');
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if (isset($_GET['error']) && $_GET['error'] === 'student_web') {
-    $error = 'Students should use the Scholarly mobile app to log in.';
+    $error = 'Students use Google sign-in from the public programs page for applications, and the mobile app for voucher claims.';
 }
 
 render_login_layout('Login', function () use ($error): void {

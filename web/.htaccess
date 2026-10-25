@@ -3,6 +3,7 @@ DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteRule ^assets/uploads/scholars/ - [F,L]
 
     # Uncomment after SSL is active in hPanel (Websites → SSL):
     # RewriteCond %{HTTPS} !=on

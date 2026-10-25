@@ -10,6 +10,7 @@ declare(strict_types=1);
  */
 return [
     'base_url' => '',
+    'private_application_storage_dir' => '/home/your-user/private/scholarly-application-documents',
     'db' => [
         'host' => 'localhost',
         'port' => 3306,
@@ -18,4 +19,9 @@ return [
         'pass' => 'PASTE_YOUR_DB_PASSWORD_HERE',
         'charset' => 'utf8mb4',
     ],
+    'google_oauth' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'redirect_uri' => 'http://localhost/scholarship-qr-monitor/web/auth/google-callback.php',
+    ]
 ];

@@ -64,12 +64,18 @@ final class ScholarFormController
     public static function handle(PDO $pdo): void
     {
         $id = (int) ($_GET['id'] ?? 0);
-$scholar = null;
-if ($id > 0) {
-    $stmt = $pdo->prepare('SELECT * FROM scholars WHERE id = ?');
-    $stmt->execute([$id]);
-    $scholar = $stmt->fetch();
-}
+        require_role($pdo, ['admin']);
+        if ($id < 1) {
+            flash('error', 'New scholar profiles are created by approving a student registration.');
+            redirect('admin/applications.php');
+        }
+        $stmt = $pdo->prepare('SELECT * FROM scholars WHERE id = ?');
+        $stmt->execute([$id]);
+        $scholar = $stmt->fetch();
+        if (!$scholar) {
+            flash('error', 'Scholar not found.');
+            redirect('admin/scholars.php');
+        }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $admin = require_role($pdo, ['admin']);
@@ -89,6 +95,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $removePhoto = isset($_POST['remove_photo']);
 
     $postId = (int) ($_POST['id'] ?? 0);
+    if ($postId !== $id) {
+        flash('error', 'Invalid scholar edit request.');
+        redirect('admin/scholars.php');
+    }
 
     try {
         if ($postId > 0) {
@@ -198,7 +208,7 @@ if ($scholar) {
 }
 
 $isEdit = (bool) $scholar;
-$pageTitle = $isEdit ? 'Edit Scholar' : 'Add Scholar';
+$pageTitle = 'Edit Scholar';
 $defaults = [
     'student_no' => $scholar['student_no'] ?? '',
     'first_name' => $scholar['first_name'] ?? '',

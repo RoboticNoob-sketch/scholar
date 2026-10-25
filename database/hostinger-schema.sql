@@ -5,6 +5,8 @@
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(80) NOT NULL UNIQUE,
+    email VARCHAR(254) NULL UNIQUE,
+    google_sub VARCHAR(255) NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('admin', 'approver', 'staff', 'student') NOT NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
@@ -42,6 +44,35 @@ CREATE TABLE scholarship_programs (
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE scholarship_applications (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    applicant_user_id INT UNSIGNED NOT NULL,
+    program_id INT UNSIGNED NULL,
+    general_registration_user_id INT UNSIGNED GENERATED ALWAYS AS (CASE WHEN program_id IS NULL THEN applicant_user_id ELSE NULL END) STORED,
+    first_name VARCHAR(80) NOT NULL,
+    last_name VARCHAR(80) NOT NULL,
+    phone VARCHAR(40) NOT NULL,
+    school_name VARCHAR(160) NOT NULL,
+    course VARCHAR(120) NOT NULL,
+    year_level VARCHAR(40) NOT NULL,
+    application_note TEXT NULL,
+    privacy_acknowledged_at DATETIME NOT NULL,
+    photo_2x2_path VARCHAR(255) NULL,
+    enrollment_form_path VARCHAR(255) NULL,
+    status ENUM('submitted', 'under_review', 'needs_info', 'approved', 'declined') NOT NULL DEFAULT 'submitted',
+    review_note VARCHAR(1000) NULL,
+    reviewed_by INT UNSIGNED NULL,
+    reviewed_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_application_user_program (applicant_user_id, program_id),
+    UNIQUE KEY uq_general_registration_user (general_registration_user_id),
+    INDEX idx_application_status_created (status, created_at),
+    CONSTRAINT fk_application_user FOREIGN KEY (applicant_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_application_program FOREIGN KEY (program_id) REFERENCES scholarship_programs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_application_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE enrollments (

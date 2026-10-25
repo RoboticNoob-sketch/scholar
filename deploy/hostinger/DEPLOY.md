@@ -69,6 +69,8 @@ Your login URL becomes: `https://yourdomain.com/login.php`
 
 Do **not** import `database/seed.sql` on production (demo accounts use password `password`).
 
+For an existing database, also run `database/migrate-student-applications.sql` in phpMyAdmin to add Google identity, application, consent, and private document-path columns.
+
 ---
 
 ## Step 3 — Create your admin account
@@ -124,10 +126,20 @@ return [
         'user' => 'u123456789_admin',
         'pass' => 'your-real-password',
     ],
+      'private_application_storage_dir' => '/home/ACCOUNT/private/scholarly-application-documents',
+      'google_oauth' => [
+        'client_id' => 'YOUR_PRODUCTION_CLIENT_ID',
+        'client_secret' => 'YOUR_PRODUCTION_CLIENT_SECRET',
+        'redirect_uri' => 'https://yourdomain.com/auth/google-callback.php',
+      ],
 ];
 ```
 
 `config.local.php` is gitignored — credentials stay on the server only.
+
+    The private document directory must be outside `public_html` and writable by PHP. Replace `/home/ACCOUNT` with the actual account path shown in hPanel. The app creates the final directory with restricted permissions on the first upload. Never put application documents under `public_html`, even if direct links are hidden.
+
+    The student form requires a square 2x2 JPG/PNG photo (up to 2 MB) and an enrollment form as PDF/JPG/PNG (up to 5 MB). Admins view these files through the authenticated Applications page; direct public file URLs are not provided. Set PHP `upload_max_filesize` to at least `5M` and `post_max_size` to at least `8M`.
 
 If the site is in a subfolder:
 

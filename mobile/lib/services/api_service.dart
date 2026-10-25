@@ -71,6 +71,12 @@ class ApiService {
     return '$base/$path';
   }
 
+  static Map<String, String>? get mediaHeaders {
+    final currentToken = token;
+    if (currentToken == null || currentToken.isEmpty) return null;
+    return {'Authorization': 'Bearer $currentToken'};
+  }
+
   static Map<String, String> get _headers => {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
