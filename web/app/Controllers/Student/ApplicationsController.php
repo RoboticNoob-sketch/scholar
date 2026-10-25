@@ -21,8 +21,15 @@ final class ApplicationsController
             $firstName = trim((string) ($_POST['first_name'] ?? ''));
             $lastName = trim((string) ($_POST['last_name'] ?? ''));
             $phone = trim((string) ($_POST['phone'] ?? ''));
-            $schoolName = trim((string) ($_POST['school_name'] ?? ''));
-            $course = trim((string) ($_POST['course'] ?? ''));
+            $schoolChoice = trim((string) ($_POST['school_choice'] ?? ''));
+            $schoolName = $schoolChoice === 'Other'
+                ? trim((string) ($_POST['school_other'] ?? ''))
+                : ($schoolChoice === 'SLSU Tiaong Campus' ? $schoolChoice : '');
+            $courseChoice = trim((string) ($_POST['course_choice'] ?? ''));
+            $courseOptions = ['BS Information Technology', 'BS Computer Science', 'STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'];
+            $course = $courseChoice === 'Other'
+                ? trim((string) ($_POST['course_other'] ?? ''))
+                : (in_array($courseChoice, $courseOptions, true) ? $courseChoice : '');
             $yearLevel = trim((string) ($_POST['year_level'] ?? ''));
             $applicationNote = trim((string) ($_POST['application_note'] ?? ''));
             $privacyAcknowledged = ($_POST['privacy_acknowledged'] ?? '') === '1';
@@ -41,7 +48,7 @@ final class ApplicationsController
                 }
             }
 
-            if ($firstName === '' || $lastName === '' || $phone === '' || $schoolName === '' || $course === '' || $yearLevel === '' || !$privacyAcknowledged) {
+            if ($firstName === '' || $lastName === '' || $phone === '' || $schoolName === '' || strlen($schoolName) > 160 || $course === '' || strlen($course) > 120 || $yearLevel === '' || !$privacyAcknowledged) {
                 flash('error', 'Complete all required details and acknowledge how your application information will be used.');
                 redirect($applicationId > 0 ? 'student/applications.php?edit=' . $applicationId : 'student/applications.php');
             }

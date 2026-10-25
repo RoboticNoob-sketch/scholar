@@ -20,6 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
     revealItems.forEach((item) => item.classList.add('is-visible'));
   }
 
+  document.querySelectorAll('[data-other-choice]').forEach((select) => {
+    const field = document.querySelector(`[data-other-field="${select.dataset.otherChoice}"]`);
+    const input = field?.querySelector('input');
+    const updateOtherField = () => {
+      const show = select.value === 'Other';
+      if (field) field.hidden = !show;
+      if (input) input.required = show;
+    };
+    select.addEventListener('change', updateOtherField);
+    updateOtherField();
+  });
+
   const shell = document.querySelector('.app-shell');
   const toggle = document.querySelector('[data-sidebar-toggle]');
   const overlay = document.querySelector('.sidebar-overlay');

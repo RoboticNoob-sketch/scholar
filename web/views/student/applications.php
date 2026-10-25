@@ -6,6 +6,12 @@ $statusLabels = [
     'approved' => 'Approved',
     'declined' => 'Not selected',
 ];
+  $schoolOptions = ['SLSU Tiaong Campus'];
+  $courseOptions = ['BS Information Technology', 'BS Computer Science', 'STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'];
+  $schoolValue = (string) ($editing['school_name'] ?? '');
+  $schoolChoice = in_array($schoolValue, $schoolOptions, true) ? $schoolValue : ($schoolValue !== '' ? 'Other' : '');
+  $courseValue = (string) ($editing['course'] ?? '');
+  $courseChoice = in_array($courseValue, $courseOptions, true) ? $courseValue : ($courseValue !== '' ? 'Other' : '');
   $hasGeneralRegistration = false;
   foreach ($applications as $application) {
     if (empty($application['program_id'])) {
@@ -81,8 +87,10 @@ $statusLabels = [
             <label class="student-field"><span>Last name</span><input name="last_name" maxlength="80" value="<?= e($editing['last_name'] ?? '') ?>" autocomplete="family-name" required></label>
           </div>
           <label class="student-field"><span>Contact number</span><input name="phone" type="tel" maxlength="40" value="<?= e($editing['phone'] ?? '') ?>" autocomplete="tel" required></label>
-          <label class="student-field"><span>School</span><input name="school_name" maxlength="160" value="<?= e($editing['school_name'] ?? '') ?>" required></label>
-          <label class="student-field"><span>Course or strand</span><input name="course" maxlength="120" value="<?= e($editing['course'] ?? '') ?>" required></label>
+          <label class="student-field"><span>School</span><select name="school_choice" data-other-choice="school" required><option value="">Choose a school</option><?php foreach ($schoolOptions as $option): ?><option value="<?= e($option) ?>" <?= $schoolChoice === $option ? 'selected' : '' ?>><?= e($option) ?></option><?php endforeach; ?><option value="Other" <?= $schoolChoice === 'Other' ? 'selected' : '' ?>>Other</option></select></label>
+          <label class="student-field" data-other-field="school" <?= $schoolChoice === 'Other' ? '' : 'hidden' ?>><span>Enter school name</span><input name="school_other" maxlength="160" value="<?= $schoolChoice === 'Other' ? e($schoolValue) : '' ?>" <?= $schoolChoice === 'Other' ? 'required' : '' ?>></label>
+          <label class="student-field"><span>Course or strand</span><select name="course_choice" data-other-choice="course" required><option value="">Choose a course or strand</option><?php foreach ($courseOptions as $option): ?><option value="<?= e($option) ?>" <?= $courseChoice === $option ? 'selected' : '' ?>><?= e($option) ?></option><?php endforeach; ?><option value="Other" <?= $courseChoice === 'Other' ? 'selected' : '' ?>>Other</option></select></label>
+          <label class="student-field" data-other-field="course" <?= $courseChoice === 'Other' ? '' : 'hidden' ?>><span>Enter course or strand</span><input name="course_other" maxlength="120" value="<?= $courseChoice === 'Other' ? e($courseValue) : '' ?>" <?= $courseChoice === 'Other' ? 'required' : '' ?>></label>
           <label class="student-field"><span>Year level</span><input name="year_level" maxlength="40" value="<?= e($editing['year_level'] ?? '') ?>" placeholder="For example, 1st year" required></label>
           <label class="student-field"><span>Note to the SK office <small>Optional</small></span><textarea name="application_note" rows="4" maxlength="2000"><?= e($editing['application_note'] ?? '') ?></textarea></label>
           <label class="student-field"><span>2x2 ID photo</span><?php if (!empty($editing['photo_2x2_path'])): ?><small>Photo already uploaded. Leave blank to keep it or choose a replacement.</small><?php endif; ?><input type="file" name="photo_2x2" accept=".jpg,.jpeg,.png,image/jpeg,image/png" <?= empty($editing['photo_2x2_path']) ? 'required' : '' ?>><small>Square JPG or PNG, at least 300 × 300 pixels, up to 2 MB.</small></label>

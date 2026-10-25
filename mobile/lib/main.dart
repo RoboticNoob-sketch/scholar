@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/services.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
@@ -54,10 +55,10 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     final role = await SessionService.getRole();
     final username = await SessionService.getUsername();
     final server = await SessionService.getServerHost();
-    if (server != null && server.isNotEmpty) {
+    if (server != null && server.isNotEmpty && !(kReleaseMode && ApiService.webPathForHost(server).isNotEmpty)) {
       ApiService.customHost = server;
     } else {
-      ApiService.customHost = ApiService.productionHost;
+      ApiService.customHost = ApiService.defaultServerHost;
     }
     if (token != null) {
       ApiService.token = token;

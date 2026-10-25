@@ -11,5 +11,8 @@
 .vscode/
 mobile/build/
 mobile/android/build/
+mobile/android/key.properties
+mobile/android/app/*.jks
+mobile/android/app/*.keystore
 mobile/.dart_tool/
 mobile/.flutter-plugins-dependencies

@@ -187,23 +187,34 @@ Common issues:
 
 Staff and student phones must reach your **HTTPS** API over the internet (not USB localhost).
 
-1. Open the app → expand **Server URL** on the login screen
-2. Enter: `https://yourdomain.com` (no trailing slash; no `/web` if you uploaded to root)
-3. Log in with production accounts
+New installs default to `https://scholarship-qr-monitor.online`. For local XAMPP development, run with `--dart-define=API_BASE_URL=http://192.168.1.44`.
 
-For a release APK with the URL baked in, change the default in `mobile/lib/screens/login_screen.dart` and rebuild:
+For public Android releases, create a private JKS keystore from the `mobile` directory. `keytool` will prompt for passwords; enter them locally and do not share or commit them:
 
 ```powershell
-cd mobile
+keytool -genkeypair -v -keystore android\app\upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+Copy `android\key.properties.example` to `android\key.properties`, then set its passwords and alias. Both the properties file and keystore are gitignored. The release build intentionally fails until signing is configured.
+
+Register the release keystore SHA-1 as an Android OAuth client in the same Google Cloud project. Obtain it with:
+
+```powershell
+keytool -list -v -keystore android\app\upload-keystore.jks -alias upload
+```
+
+The release SHA-1 differs from the debug SHA-1. Then build from `mobile`:
+
+```powershell
 flutter build apk --release
 ```
 
 ### Publish the Android app download
 
-The landing page shows an **Android download coming soon** placeholder until `mobile_download_url` is set. Before publishing, configure a private release keystore and sign the APK with it; the current debug signing setup is for testing only. Keep the keystore and passwords out of Git.
+The landing page shows an **Android download coming soon** placeholder until `mobile_download_url` is set. The download URL should point to a signed release APK, never a debug build.
 
 1. Build the signed release APK with `flutter build apk --release`.
-2. Upload it to a versioned path such as `public_html/downloads/scholarly-android-v1.0.0.apk`.
+2. Upload `mobile/build/app/outputs/flutter-apk/app-release.apk` to `public_html/web/downloads/` with a versioned filename such as `scholarly-android-v1.0.0.apk`. The repository-root `.htaccess` routes `/downloads/...` to `web/downloads/...`.
 3. In `web/config/config.local.php`, set:
 
   ```php

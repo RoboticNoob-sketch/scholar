@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   static const productionHost = 'https://scholarship-qr-monitor.online';
+  static const defaultServerHost = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: productionHost,
+  );
   static const googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
     defaultValue: '53011635142-vu8rdf9iliouls09pun58prf1ku0k294.apps.googleusercontent.com',
@@ -22,7 +26,7 @@ class ApiService {
     productionHost,
   ];
 
-  static String customHost = localWifiHost;
+  static String customHost = defaultServerHost;
   static String phoneBaseUrl = '';
   static String lastTriedUrl = '';
   static List<String> triedUrls = [];
@@ -56,11 +60,12 @@ class ApiService {
     final hosts = <String>[];
     final custom = customHost.trim().replaceAll(RegExp(r'/+$'), '');
     if (custom.isNotEmpty) hosts.add(custom);
-    if (kIsWeb) return [productionHost];
+    if (kIsWeb) return [defaultServerHost];
     if (Platform.isAndroid) {
+      if (kReleaseMode) return hosts.isEmpty ? [defaultServerHost] : hosts;
       hosts.addAll(_defaultAndroidHosts);
     } else {
-      hosts.add(productionHost);
+      hosts.add(defaultServerHost);
     }
     return hosts.toSet().toList();
   }
@@ -112,8 +117,8 @@ class ApiService {
 
   static Future<String> resolveBaseUrl({bool force = false}) async {
     if (!force && phoneBaseUrl.isNotEmpty) return phoneBaseUrl;
-    if (kIsWeb) return baseForHost(productionHost);
-    if (!Platform.isAndroid) return baseForHost(productionHost);
+    if (kIsWeb) return baseForHost(defaultServerHost);
+    if (!Platform.isAndroid) return baseForHost(defaultServerHost);
 
     if (force) phoneBaseUrl = '';
     triedUrls = [];

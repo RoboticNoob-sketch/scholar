@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import '../services/session_service.dart';
@@ -22,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   );
   final _username = TextEditingController();
   final _password = TextEditingController();
-  final _server = TextEditingController(text: ApiService.localWifiHost);
+  final _server = TextEditingController(text: ApiService.defaultServerHost);
   bool _loading = false;
   bool _obscure = true;
   bool _showServer = false;
@@ -38,12 +39,14 @@ class _LoginScreenState extends State<LoginScreen> {
     var saved = await SessionService.getServerHost();
     const legacy = {
       'http://127.0.0.1:8080',
+      ApiService.localWifiHost,
       'http://192.168.1.18',
       'http://192.168.1.19',
       'http://192.168.37.246',
     };
-    if (saved == null || saved.isEmpty || legacy.contains(saved) || saved == ApiService.productionHost) {
-      saved = ApiService.localWifiHost;
+    final savedHostIsLocal = saved != null && ApiService.webPathForHost(saved).isNotEmpty;
+    if (saved == null || saved.isEmpty || legacy.contains(saved) || (kReleaseMode && savedHostIsLocal)) {
+      saved = ApiService.defaultServerHost;
       await SessionService.saveServerHost(saved);
     }
     if (mounted) {
@@ -78,8 +81,10 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {
       final tried = ApiService.triedUrls.isEmpty ? ApiService.lastTriedUrl : ApiService.triedUrls.join('\n');
       setState(() {
-        _error =
-            'Cannot reach local server. Check that Apache is running and the phone and PC are on the same Wi-Fi.\n\nDefault: ${ApiService.localWifiHost}\n\nTried:\n$tried';
+        final isLocal = ApiService.webPathForHost(server).isNotEmpty;
+        _error = isLocal
+          ? 'Cannot reach local server. Check that Apache is running and the phone and PC are on the same Wi-Fi.\n\nDefault: ${ApiService.defaultServerHost}\n\nTried:\n$tried'
+          : 'Cannot reach the server. Check your internet connection and Server settings.\n\nDefault: ${ApiService.defaultServerHost}\n\nTried:\n$tried';
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -199,14 +204,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: () => setState(() => _showServer = !_showServer),
-                          child: Text(_showServer ? 'Hide server settings' : 'Server settings'),
+                      if (!kReleaseMode)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(
+                            onPressed: () => setState(() => _showServer = !_showServer),
+                            child: Text(_showServer ? 'Hide server settings' : 'Server settings'),
+                          ),
                         ),
-                      ),
-                      if (_showServer) ...[
+                      if (!kReleaseMode && _showServer) ...[
                         TextField(
                           controller: _server,
                           decoration: const InputDecoration(
