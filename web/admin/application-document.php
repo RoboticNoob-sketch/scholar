@@ -54,6 +54,8 @@ header('Content-Length: ' . (string) filesize($path));
 header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header("Content-Security-Policy: sandbox");
+header('X-Frame-Options: SAMEORIGIN');
+if ($mime !== 'application/pdf') {
+    header("Content-Security-Policy: sandbox");
+}
 readfile($path);

@@ -49,6 +49,29 @@ $statusOptions = ['' => 'All statuses'] + $statusLabels;
                   <details class="application-row-review">
                     <summary><i data-lucide="clipboard-list"></i> Review</summary>
                     <div class="application-row-review-panel">
+                      <?php
+                        $docUrl = static fn (string $doc): string => base_url('admin/application-document.php?id=' . (int) $application['id'] . '&document=' . $doc);
+                        $formIsPdf = str_ends_with(strtolower((string) $application['enrollment_form_path']), '.pdf');
+                      ?>
+                      <div class="application-review-docs">
+                        <figure>
+                          <figcaption>2x2 photo / ID</figcaption>
+                          <?php if (!empty($application['photo_2x2_path'])): ?>
+                            <a href="<?= e($docUrl('photo_2x2')) ?>" target="_blank" rel="noopener"><img loading="lazy" alt="2x2 photo of <?= e($application['full_name'] ?? 'student') ?>" src="<?= e($docUrl('photo_2x2')) ?>"></a>
+                          <?php else: ?><div class="application-review-doc-missing">Not uploaded</div><?php endif; ?>
+                        </figure>
+                        <figure>
+                          <figcaption>Enrollment form</figcaption>
+                          <?php if (empty($application['enrollment_form_path'])): ?>
+                            <div class="application-review-doc-missing">Not uploaded</div>
+                          <?php elseif ($formIsPdf): ?>
+                            <iframe loading="lazy" title="Enrollment form" src="<?= e($docUrl('enrollment_form')) ?>"></iframe>
+                          <?php else: ?>
+                            <a href="<?= e($docUrl('enrollment_form')) ?>" target="_blank" rel="noopener"><img loading="lazy" alt="Enrollment form" src="<?= e($docUrl('enrollment_form')) ?>"></a>
+                          <?php endif; ?>
+                        </figure>
+                      </div>
+                      <div class="application-review-main">
                       <dl class="application-review-details">
                         <div><dt>Phone</dt><dd><?= e($application['phone']) ?></dd></div>
                         <div><dt>School</dt><dd><?= e($application['school_name']) ?></dd></div>
@@ -66,7 +89,8 @@ $statusOptions = ['' => 'All statuses'] + $statusLabels;
                         <label><span>Note to student / internal note <small data-note-hint></small></span><textarea name="review_note" rows="3" maxlength="1000" placeholder="Required when requesting information" data-review-note><?= e($application['review_note'] ?? '') ?></textarea></label>
                         <button class="btn btn-primary" type="submit"><i data-lucide="check"></i> Save decision</button>
                       </form>
-                    </div>
+                                              </div>
+                                            </div>
                   </details>
                 <?php endif; ?>
               </td>
