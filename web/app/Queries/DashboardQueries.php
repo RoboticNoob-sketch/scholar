@@ -79,6 +79,7 @@ final class DashboardQueries
             'SELECT a.*, u.username
              FROM audit_logs a
              LEFT JOIN users u ON u.id = a.user_id
+             WHERE (u.is_system IS NULL OR u.is_system = 0 OR u.id = ' . (int) ($_SESSION['user_id'] ?? 0) . ')
              ORDER BY a.created_at DESC
              LIMIT ?'
         );

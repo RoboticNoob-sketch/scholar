@@ -144,6 +144,9 @@ CREATE TABLE audit_logs (
     details TEXT NULL,
     ip_address VARCHAR(45) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audit_created (created_at),
+    INDEX idx_audit_action_created (action, created_at),
+    INDEX idx_audit_user_created (user_id, created_at),
     CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 

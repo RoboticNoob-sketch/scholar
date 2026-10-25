@@ -7,14 +7,21 @@ require_once __DIR__ . '/../../../includes/bootstrap.php';
 use App\Queries\AuditQueries;
 
 $input = require_admin_datatables($pdo);
-$result = AuditQueries::datatables($pdo, $input);
+$result = AuditQueries::datatables($pdo, $input, [
+    'action' => (string) ($_GET['action'] ?? $_POST['action'] ?? ''),
+    'user' => (string) ($_GET['user'] ?? $_POST['user'] ?? ''),
+    'date_from' => (string) ($_GET['date_from'] ?? $_POST['date_from'] ?? ''),
+    'date_to' => (string) ($_GET['date_to'] ?? $_POST['date_to'] ?? ''),
+]);
 
+$failureActions = AuditQueries::failureActions();
 $data = [];
 foreach ($result['rows'] as $row) {
+    $badge = in_array($row['action'], $failureActions, true) ? 'badge-negative' : 'badge-accent';
     $data[] = [
         e(format_datetime($row['created_at'])),
         e($row['username'] ?? 'System'),
-        '<span class="badge badge-accent">' . e(str_replace('_', ' ', $row['action'])) . '</span>',
+        '<span class="badge ' . $badge . '">' . e(str_replace('_', ' ', $row['action'])) . '</span>',
         e($row['details'] ?? ($row['entity_type'] . ' #' . $row['entity_id'])),
         e($row['ip_address'] ?? '—'),
     ];
