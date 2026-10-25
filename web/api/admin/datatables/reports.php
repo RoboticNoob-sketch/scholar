@@ -8,8 +8,8 @@ use App\Queries\ReportQueries;
 
 try {
     $input = require_admin_datatables($pdo);
-    $batchId = (int) ($_GET['batch_id'] ?? $_POST['batch_id'] ?? 0);
-    $result = ReportQueries::datatables($pdo, $input, $batchId);
+    $filters = claims_report_filters(array_merge($_GET, $_POST));
+    $result = ReportQueries::datatables($pdo, $input, $filters);
 
     $data = [];
     foreach ($result['rows'] as $row) {

@@ -2,15 +2,112 @@
 
 declare(strict_types=1);
 
-function claims_report_sql(int $batchId = 0): array
+function claims_report_filters(array $src): array
 {
-    $query = claims_report_base_sql($batchId);
+    $period = (string) ($src['period'] ?? '');
+    $from = (string) ($src['date_from'] ?? '');
+    $to = (string) ($src['date_to'] ?? '');
+    $valid = static fn(string $d): bool => (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) && strtotime($d) !== false;
+
+    $today = date('Y-m-d');
+    switch ($period) {
+        case 'today':
+            $from = $to = $today;
+            break;
+        case '7d':
+            $from = date('Y-m-d', strtotime('-6 days'));
+            $to = $today;
+            break;
+        case '30d':
+            $from = date('Y-m-d', strtotime('-29 days'));
+            $to = $today;
+            break;
+        case 'month':
+            $from = date('Y-m-01');
+            $to = $today;
+            break;
+        default:
+            $period = $valid($from) || $valid($to) ? 'custom' : '';
+    }
+    if (!$valid($from)) {
+        $from = '';
+    }
+    if (!$valid($to)) {
+        $to = '';
+    }
+
+    return [
+        'period' => $period,
+        'date_from' => $from,
+        'date_to' => $to,
+        'program_id' => max(0, (int) ($src['program_id'] ?? 0)),
+        'batch_id' => max(0, (int) ($src['batch_id'] ?? 0)),
+        'staff_id' => max(0, (int) ($src['staff_id'] ?? 0)),
+    ];
+}
+
+function claims_report_where(array $filters): array
+{
+    $sql = '';
+    $params = [];
+    if ($filters['batch_id'] > 0) {
+        $sql .= ' AND b.id = ?';
+        $params[] = $filters['batch_id'];
+    }
+    if ($filters['program_id'] > 0) {
+        $sql .= ' AND b.program_id = ?';
+        $params[] = $filters['program_id'];
+    }
+    if ($filters['staff_id'] > 0) {
+        $sql .= ' AND c.staff_user_id = ?';
+        $params[] = $filters['staff_id'];
+    }
+    if ($filters['date_from'] !== '') {
+        $sql .= ' AND c.claimed_at >= ?';
+        $params[] = $filters['date_from'] . ' 00:00:00';
+    }
+    if ($filters['date_to'] !== '') {
+        $sql .= ' AND c.claimed_at <= ?';
+        $params[] = $filters['date_to'] . ' 23:59:59';
+    }
+
+    return [$sql, $params];
+}
+
+function claims_report_sql(array $filters): array
+{
+    $query = claims_report_base_sql($filters);
     $query['sql'] .= ' ORDER BY c.claimed_at DESC';
 
     return $query;
 }
 
-function claims_report_base_sql(int $batchId = 0): array
+function claims_report_filter_labels(PDO $pdo, array $filters): array
+{
+    $lines = [];
+    $lookup = static function (string $table, int $id) use ($pdo): string {
+        $col = $table === 'users' ? 'username' : 'name';
+        $stmt = $pdo->prepare("SELECT $col FROM $table WHERE id = ?");
+        $stmt->execute([$id]);
+        return (string) ($stmt->fetchColumn() ?: '#' . $id);
+    };
+    if ($filters['program_id'] > 0) {
+        $lines[] = 'Program: ' . $lookup('scholarship_programs', $filters['program_id']);
+    }
+    if ($filters['batch_id'] > 0) {
+        $lines[] = 'Batch: ' . $lookup('distribution_batches', $filters['batch_id']);
+    }
+    if ($filters['staff_id'] > 0) {
+        $lines[] = 'Processed by: ' . $lookup('users', $filters['staff_id']);
+    }
+    if ($filters['date_from'] !== '' || $filters['date_to'] !== '') {
+        $lines[] = 'Period: ' . ($filters['date_from'] ?: 'start') . ' to ' . ($filters['date_to'] ?: 'today');
+    }
+
+    return $lines ?: ['Filter: All claims'];
+}
+
+function claims_report_base_sql(array $filters): array
 {
     $sql = 'SELECT c.claimed_at, v.amount, v.voucher_code, v.status, b.name AS batch_name, p.name AS program_name,
                    s.student_no, s.first_name, s.last_name, u.username AS staff_name
@@ -21,36 +118,88 @@ function claims_report_base_sql(int $batchId = 0): array
             JOIN scholars s ON s.id = v.scholar_id
             JOIN users u ON u.id = c.staff_user_id
             WHERE 1=1';
-    $params = [];
-    if ($batchId > 0) {
-        $sql .= ' AND b.id = ?';
-        $params[] = $batchId;
-    }
+    [$where, $params] = claims_report_where($filters);
 
-    return ['sql' => $sql, 'params' => $params];
+    return ['sql' => $sql . $where, 'params' => $params];
 }
 
-function claims_report_summary(PDO $pdo, int $batchId = 0): array
+function claims_report_summary(PDO $pdo, array $filters): array
 {
-    $base = claims_report_sql($batchId);
-    $sql = 'SELECT COUNT(*) AS total_claims, COALESCE(SUM(v.amount), 0) AS total_amount
+    [$where, $params] = claims_report_where($filters);
+    $sql = 'SELECT COUNT(*) AS total_claims, COALESCE(SUM(v.amount), 0) AS total_amount,
+                   COUNT(DISTINCT v.scholar_id) AS scholars
             FROM claims c
             JOIN claim_vouchers v ON v.id = c.voucher_id
             JOIN distribution_batches b ON b.id = v.batch_id
-            WHERE 1=1';
-    $params = [];
-    if ($batchId > 0) {
-        $sql .= ' AND b.id = ?';
-        $params[] = $batchId;
-    }
+            WHERE 1=1' . $where;
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    $row = $stmt->fetch() ?: ['total_claims' => 0, 'total_amount' => 0];
+    $row = $stmt->fetch() ?: [];
+    $claims = (int) ($row['total_claims'] ?? 0);
+    $amount = (float) ($row['total_amount'] ?? 0);
+
+    // Claim rate: vouchers claimed vs. all vouchers (excluding void) in the filtered scope
+    $vSql = 'SELECT COUNT(*) AS issued, SUM(v.status = \'claimed\') AS claimed, SUM(v.status = \'pending\') AS pending,
+                    SUM(v.status = \'expired\') AS expired
+             FROM claim_vouchers v
+             JOIN distribution_batches b ON b.id = v.batch_id
+             WHERE v.status <> \'void\'';
+    $vParams = [];
+    if ($filters['batch_id'] > 0) {
+        $vSql .= ' AND b.id = ?';
+        $vParams[] = $filters['batch_id'];
+    }
+    if ($filters['program_id'] > 0) {
+        $vSql .= ' AND b.program_id = ?';
+        $vParams[] = $filters['program_id'];
+    }
+    $vStmt = $pdo->prepare($vSql);
+    $vStmt->execute($vParams);
+    $v = $vStmt->fetch() ?: [];
+    $issued = (int) ($v['issued'] ?? 0);
+    $claimedAll = (int) ($v['claimed'] ?? 0);
 
     return [
-        'total_claims' => (int) $row['total_claims'],
-        'total_amount' => (float) $row['total_amount'],
+        'total_claims' => $claims,
+        'total_amount' => $amount,
+        'scholars' => (int) ($row['scholars'] ?? 0),
+        'average' => $claims > 0 ? $amount / $claims : 0.0,
+        'issued' => $issued,
+        'pending' => (int) ($v['pending'] ?? 0),
+        'expired' => (int) ($v['expired'] ?? 0),
+        'claim_rate' => $issued > 0 ? (int) round($claimedAll / $issued * 100) : 0,
     ];
+}
+
+function claims_report_trend(PDO $pdo, array $filters): array
+{
+    [$where, $params] = claims_report_where($filters);
+    $stmt = $pdo->prepare(
+        'SELECT DATE(c.claimed_at) AS d, COUNT(*) AS n, SUM(v.amount) AS amt
+         FROM claims c
+         JOIN claim_vouchers v ON v.id = c.voucher_id
+         JOIN distribution_batches b ON b.id = v.batch_id
+         WHERE 1=1' . $where . ' GROUP BY DATE(c.claimed_at) ORDER BY d DESC LIMIT 30'
+    );
+    $stmt->execute($params);
+
+    return array_reverse($stmt->fetchAll());
+}
+
+function claims_report_breakdown(PDO $pdo, array $filters): array
+{
+    [$where, $params] = claims_report_where($filters);
+    $stmt = $pdo->prepare(
+        'SELECT p.name AS program_name, COUNT(*) AS n, SUM(v.amount) AS amt
+         FROM claims c
+         JOIN claim_vouchers v ON v.id = c.voucher_id
+         JOIN distribution_batches b ON b.id = v.batch_id
+         JOIN scholarship_programs p ON p.id = b.program_id
+         WHERE 1=1' . $where . ' GROUP BY p.id, p.name ORDER BY amt DESC LIMIT 8'
+    );
+    $stmt->execute($params);
+
+    return $stmt->fetchAll();
 }
 
 function batch_vouchers_sql(int $batchId): array

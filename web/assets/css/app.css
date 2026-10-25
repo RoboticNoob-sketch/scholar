@@ -2185,3 +2185,14 @@ body {
 .close-batch-dialog { max-width: 480px; }
 
 .close-batch-dialog .btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+
+/* Reports page */
+.report-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; margin: 0 0 14px; }
+.kpi-sub { margin-top: 6px; font-size: .78rem; color: var(--text-muted, #9aa59a); }
+.report-breakdown { display: grid; gap: 14px; }
+.report-break-head { display: flex; justify-content: space-between; gap: 12px; font-size: .9rem; }
+.report-break-track { height: 8px; margin: 6px 0 4px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
+.report-break-track span { display: block; height: 100%; border-radius: 99px; background: var(--accent, #b6f35a); }
+.report-break-sub { font-size: .75rem; color: var(--text-muted, #9aa59a); }
+.btn.is-disabled { opacity: .45; pointer-events: none; }
+@media (max-width: 900px) { .report-grid { grid-template-columns: 1fr; } }

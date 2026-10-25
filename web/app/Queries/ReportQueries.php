@@ -8,9 +8,9 @@ use PDO;
 
 final class ReportQueries
 {
-    public static function datatables(PDO $pdo, array $input, int $batchId = 0): array
+    public static function datatables(PDO $pdo, array $input, array $filters): array
     {
-        $query = claims_report_base_sql($batchId);
+        $query = claims_report_base_sql($filters);
         $sql = $query['sql'];
         $params = $query['params'];
 
@@ -36,7 +36,7 @@ final class ReportQueries
         $countStmt->execute($params);
         $filtered = (int) $countStmt->fetchColumn();
 
-        $summary = claims_report_summary($pdo, $batchId);
+        $summary = claims_report_summary($pdo, $filters);
         $total = $summary['total_claims'];
 
         $orderMap = [
