@@ -57,21 +57,6 @@ jobs:
       - name: Rename APK
         run: cp build/app/outputs/flutter-apk/app-release.apk scholarly.apk
 
-      - name: Upload to Hostinger
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_DIR: ${{ secrets.FTP_DIR }}
-        run: |
-          host="${FTP_HOST#ftp://}"; host="${host#ftps://}"; host="${host%%/*}"; host="$(echo "$host" | tr -d '[:space:]')"
-          dir="$(echo "${FTP_DIR#/}" | tr -d '[:space:]')"; dir="${dir%/}"
-          # Hostinger's FTP certificate is issued for a hostname, not the IP, so skip name verification
-          curl --fail --ssl-reqd --insecure --ftp-create-dirs \
-            --user "$FTP_USERNAME:$FTP_PASSWORD" \
-            -T scholarly.apk \
-            "ftp://$host/$dir/scholarly.apk"
-
       - name: Attach to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

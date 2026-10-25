@@ -6,7 +6,7 @@ return [
     'app_name' => 'Scholarly',
     'school_name' => 'Southern Luzon State University — Tiaong Campus',
     'school_short' => 'SLSU Tiaong · Scholarship Office',
-    'mobile_download_url' => '',
+    'mobile_download_url' => 'https://github.com/RoboticNoob-sketch/scholar/releases/latest/download/scholarly.apk',
     'base_url' => '/scholarship-qr-monitor/web',
     'private_application_storage_dir' => '',
     'db' => [
