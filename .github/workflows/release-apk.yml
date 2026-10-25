@@ -64,11 +64,14 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_DIR: ${{ secrets.FTP_DIR }}
         run: |
-          curl --fail --ssl-reqd --ftp-create-dirs \
+          host="${FTP_HOST#ftp://}"; host="${host#ftps://}"; host="${host%%/*}"; host="$(echo "$host" | tr -d '[:space:]')"
+          dir="$(echo "${FTP_DIR#/}" | tr -d '[:space:]')"; dir="${dir%/}"
+          # Hostinger's FTP certificate is issued for a hostname, not the IP, so skip name verification
+          curl --fail --ssl-reqd --insecure --ftp-create-dirs \
             --user "$FTP_USERNAME:$FTP_PASSWORD" \
             -T scholarly.apk \
-            -Q "+RNFR scholarly.apk.part" -Q "+RNTO scholarly.apk" \
-            "ftp://$FTP_HOST/${FTP_DIR#/}/scholarly.apk.part"
+            -Q "+RNFR $dir/scholarly.apk.part" -Q "+RNTO $dir/scholarly.apk" \
+            "ftp://$host/$dir/scholarly.apk.part"
 
       - name: Attach to GitHub Release
         env:
