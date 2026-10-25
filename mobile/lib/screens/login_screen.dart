@@ -164,7 +164,14 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                const SchoolLogo(size: 88),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SchoolLogo(size: 80),
+                    SizedBox(width: 14),
+                    SchoolLogo(size: 80, asset: SchoolLogo.skAsset),
+                  ],
+                ),
                 const SizedBox(height: 18),
                 RichText(
                   text: const TextSpan(
@@ -176,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text('SLSU Tiaong · Scholarship Office', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                const Text('SLSU Tiaong · SK Barangay Cabay', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                 const SizedBox(height: 32),
                 AppCard(
                   child: Column(

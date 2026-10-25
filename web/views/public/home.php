@@ -1,147 +1,349 @@
 <?php
 $programCount = count($programs);
+$totalAward = array_sum(array_map(static fn (array $p): float => (float) $p['amount'], $programs));
+$register = $googleConfigured ? base_url('auth/google-start.php') : base_url('login.php');
+$registerLabel = $googleConfigured ? 'Start your registration' : 'Sign in';
+$skLogoPath = __DIR__ . '/../../assets/images/sk-cabay-logo.png';
+$skLogoUrl = is_file($skLogoPath) ? asset_url('assets/images/sk-cabay-logo.png') : '';
 ?>
-<header class="public-nav public-landing-nav">
-  <a class="public-brand" href="<?= e(base_url('index.php')) ?>" aria-label="Scholarly home">
-    <span class="public-brand-icon"><i data-lucide="graduation-cap"></i></span>
-    <span>Scholarly<span class="public-brand-dot">.</span><small>SLSU TIAONG / CABAY</small></span>
+<div class="lp">
+<header class="lp-nav" data-lp-nav>
+  <a class="lp-brand" href="<?= e(base_url('index.php')) ?>" aria-label="Scholarly home">
+    <img src="<?= e(base_url('assets/images/slsu-tiaong-logo.png')) ?>" alt="" width="36" height="36">
+    <?php if ($skLogoUrl !== ''): ?><img src="<?= e($skLogoUrl) ?>" alt="" width="36" height="36"><?php endif; ?>
+    <span>Scholarly<b>.</b><small>SLSU Tiaong · Brgy. Cabay</small></span>
   </a>
-  <nav aria-label="Main navigation">
+  <button class="lp-nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="lp-menu" data-lp-toggle><i data-lucide="menu"></i></button>
+  <nav class="lp-menu" id="lp-menu" aria-label="Main navigation">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#sk">SK Cabay</a>
     <a href="#programs">Programs</a>
-    <a href="#student-tools">How it works</a>
-    <a href="#team">Our team</a>
-    <a class="public-nav-login" href="<?= e(base_url('login.php')) ?>">Staff portal <i data-lucide="arrow-up-right"></i></a>
+    <a href="#faq">FAQ</a>
+    <a class="lp-menu-login" href="<?= e(base_url('login.php')) ?>">Staff portal</a>
+    <a class="lp-btn lp-btn-primary lp-btn-sm" href="<?= e($register) ?>"><?= e($registerLabel) ?> <i data-lucide="arrow-up-right"></i></a>
   </nav>
 </header>
 
-<main class="public-landing">
-  <section class="public-hero" aria-labelledby="public-hero-title">
-    <div class="public-hero-image" role="img" aria-label="Students learning together in a campus study space"></div>
-    <div class="public-hero-content">
-      <div class="public-eyebrow"><span></span> SLSU TIAONG · CAPSTONE PROJECT · BARANGAY CABAY</div>
-      <p class="public-hero-pretitle">Local opportunity. Clear next steps.</p>
-      <h1 id="public-hero-title">Scholarship support,<br><em>closer to home.</em></h1>
-      <p class="public-hero-description">Explore opportunities from the Sangguniang Kabataan of Barangay Cabay, submit your registration, and follow your progress from the web or mobile app.</p>
-      <div class="public-hero-actions">
-        <?php if ($googleConfigured): ?>
-          <a class="public-button-primary" href="<?= e(base_url('auth/google-start.php')) ?>">Start your registration <i data-lucide="arrow-up-right"></i></a>
-          <a class="public-button-secondary" href="#programs">View opportunities <i data-lucide="arrow-down-right"></i></a>
-        <?php else: ?>
-          <a class="public-button-primary" href="#programs">View opportunities <i data-lucide="arrow-down-right"></i></a>
-        <?php endif; ?>
+<main>
+  <section class="lp-hero" aria-labelledby="lp-hero-title">
+    <div class="lp-hero-copy">
+      <span class="lp-pill"><i data-lucide="map-pin"></i> Sangguniang Kabataan · Barangay Cabay, Tiaong, Quezon</span>
+      <h1 id="lp-hero-title">Scholarship aid,<br><span>tracked from apply to claim.</span></h1>
+      <p>Register online, follow your application, and claim your assistance with a secure QR voucher. One connected system for students, the SK office, and approvers.</p>
+      <div class="lp-actions">
+        <a class="lp-btn lp-btn-primary" href="<?= e($register) ?>"><?= e($registerLabel) ?> <i data-lucide="arrow-up-right"></i></a>
+        <a class="lp-btn lp-btn-ghost" href="#how">See how it works <i data-lucide="arrow-down"></i></a>
       </div>
-      <div class="public-hero-note"><i data-lucide="map-pin"></i><span>Barangay Cabay · Tiaong, Quezon</span><i class="public-hero-note-rule"></i><span>Built at SLSU Tiaong</span></div>
+      <ul class="lp-hero-trust">
+        <li><i data-lucide="shield-check"></i> Google sign-in</li>
+        <li><i data-lucide="qr-code"></i> Single-use QR vouchers</li>
+        <li><i data-lucide="smartphone"></i> Web + Android</li>
+      </ul>
     </div>
-    <div class="public-hero-edition"><div><strong><?= sprintf('%02d', $programCount) ?></strong><small>PROGRAMS LISTED</small></div><span>BARANGAY CABAY · TIAONG, QUEZON</span></div>
-    <a class="public-hero-scroll" href="#programs"><span>SCROLL TO EXPLORE</span><i data-lucide="arrow-down"></i></a>
+
+    <div class="lp-hero-visual" aria-hidden="true">
+      <div class="lp-phone">
+        <div class="lp-phone-notch"></div>
+        <div class="lp-phone-screen">
+          <div class="lp-phone-head"><span>Claim voucher</span><em>READY</em></div>
+          <div class="lp-qr">
+            <?php
+              $n = 21;
+              $finder = static function (int $r, int $c, int $or, int $oc): ?bool {
+                  $dr = $r - $or; $dc = $c - $oc;
+                  if ($dr < 0 || $dr > 6 || $dc < 0 || $dc > 6) return null;
+                  return $dr === 0 || $dr === 6 || $dc === 0 || $dc === 6 || ($dr >= 2 && $dr <= 4 && $dc >= 2 && $dc <= 4);
+              };
+              for ($r = 0; $r < $n; $r++) {
+                  for ($c = 0; $c < $n; $c++) {
+                      $f = $finder($r, $c, 0, 0) ?? $finder($r, $c, 0, 14) ?? $finder($r, $c, 14, 0);
+                      $reserved = ($r < 8 && $c < 8) || ($r < 8 && $c > 12) || ($r > 12 && $c < 8);
+                      $on = $f ?? (!$reserved && (($r * 7 + $c * 13 + ($r * $c) % 5) % 3 !== 0));
+                      echo '<i', $on ? ' class="on"' : '', '></i>';
+                  }
+              }
+            ?>
+          </div>
+          <div class="lp-phone-code">VCH-2026-001</div>
+          <div class="lp-phone-foot"><i data-lucide="check-circle-2"></i> Show at the desk</div>
+        </div>
+      </div>
+      <div class="lp-float lp-float-a"><span class="lp-dot"></span><div><small>APPLICATION</small><b>Approved</b></div></div>
+      <div class="lp-float lp-float-b"><i data-lucide="scan-line"></i><div><small>SCANNED BY STAFF</small><b>Claim recorded</b></div></div>
+    </div>
   </section>
 
-  <section class="public-program-section" id="programs" aria-labelledby="programs-title" data-reveal>
-    <div class="public-section-heading">
+  <section class="lp-stats" aria-label="At a glance" data-reveal>
+    <div><strong><?= sprintf('%02d', $programCount) ?></strong><span>Active <?= $programCount === 1 ? 'program' : 'programs' ?></span></div>
+    <div><strong><?= $totalAward > 0 ? e(format_money($totalAward)) : '—' ?></strong><span>Total award value listed</span></div>
+    <div><strong>3</strong><span>Roles: student, staff, approver</span></div>
+    <div><strong>QR</strong><span>Scan-to-claim, no paper lists</span></div>
+  </section>
+
+  <section class="lp-section" id="how" aria-labelledby="how-title">
+    <div class="lp-head" data-reveal>
+      <span class="lp-kicker">How it works</span>
+      <h2 id="how-title">From first click to claimed.</h2>
+      <p>Four clear steps, the same flow every cycle.</p>
+    </div>
+    <ol class="lp-steps">
+      <li data-reveal style="--reveal-delay: 0ms"><span class="lp-step-n">01</span><i data-lucide="user-plus"></i><h3>Register</h3><p>Sign in with Google, fill in your details, and upload your 2x2 photo and enrollment form.</p></li>
+      <li data-reveal style="--reveal-delay: 90ms"><span class="lp-step-n">02</span><i data-lucide="clipboard-check"></i><h3>Get reviewed</h3><p>The SK office reviews your registration. Approvers sign off, and you see notes if anything is needed.</p></li>
+      <li data-reveal style="--reveal-delay: 180ms"><span class="lp-step-n">03</span><i data-lucide="ticket"></i><h3>Receive a voucher</h3><p>When a distribution batch opens, a QR voucher tied to your scholar profile is issued to you.</p></li>
+      <li data-reveal style="--reveal-delay: 270ms"><span class="lp-step-n">04</span><i data-lucide="scan-line"></i><h3>Claim by QR</h3><p>Show your QR at the desk. Staff scan it and the claim is recorded instantly. No paper lists.</p></li>
+    </ol>
+  </section>
+
+  <section class="lp-section lp-roles" aria-labelledby="roles-title">
+    <div class="lp-head" data-reveal>
+      <span class="lp-kicker">Built for everyone involved</span>
+      <h2 id="roles-title">One system, three views.</h2>
+    </div>
+    <div class="lp-role-grid">
+      <article data-reveal style="--reveal-delay: 0ms">
+        <span class="lp-ico"><i data-lucide="graduation-cap"></i></span>
+        <h3>Students</h3>
+        <ul>
+          <li>Register and upload documents once</li>
+          <li>See your status and SK office notes</li>
+          <li>Show profile and voucher QR from your phone</li>
+        </ul>
+      </article>
+      <article data-reveal style="--reveal-delay: 90ms">
+        <span class="lp-ico"><i data-lucide="scan-line"></i></span>
+        <h3>SK office staff</h3>
+        <ul>
+          <li>Scan voucher QR codes at the desk</li>
+          <li>Verify a scholar's profile before releasing aid</li>
+          <li>Duplicate or invalid claims are rejected</li>
+        </ul>
+      </article>
+      <article data-reveal style="--reveal-delay: 180ms">
+        <span class="lp-ico"><i data-lucide="layout-dashboard"></i></span>
+        <h3>Admins &amp; approvers</h3>
+        <ul>
+          <li>Manage programs, budgets, and batches</li>
+          <li>Approve requests with a clear review trail</li>
+          <li>Live dashboards, reports, and exports</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="lp-section" id="features" aria-labelledby="features-title">
+    <div class="lp-head" data-reveal>
+      <span class="lp-kicker">Features</span>
+      <h2 id="features-title">Everything the distribution day needs.</h2>
+    </div>
+    <div class="lp-bento">
+      <article class="lp-bento-wide" data-reveal>
+        <span class="lp-ico"><i data-lucide="qr-code"></i></span>
+        <h3>Secure QR vouchers</h3>
+        <p>Every voucher and scholar profile carries its own QR code. Scanning confirms identity and records the claim in one step.</p>
+        <div class="lp-chips"><span>Voucher QR</span><span>Profile QR</span><span>Single claim</span></div>
+      </article>
+      <article data-reveal style="--reveal-delay: 80ms">
+        <span class="lp-ico"><i data-lucide="activity"></i></span>
+        <h3>Real-time tracking</h3>
+        <p>Claimed vs. pending counts update the moment staff scan.</p>
+      </article>
+      <article data-reveal style="--reveal-delay: 120ms">
+        <span class="lp-ico"><i data-lucide="git-pull-request-arrow"></i></span>
+        <h3>Approval workflow</h3>
+        <p>Changes go through approvers so important decisions have a second set of eyes.</p>
+      </article>
+      <article data-reveal style="--reveal-delay: 160ms">
+        <span class="lp-ico"><i data-lucide="scroll-text"></i></span>
+        <h3>Audit trail</h3>
+        <p>Logins, claims, and edits are logged so every action can be traced.</p>
+      </article>
+      <article data-reveal style="--reveal-delay: 200ms">
+        <span class="lp-ico"><i data-lucide="file-bar-chart"></i></span>
+        <h3>Reports &amp; exports</h3>
+        <p>Distribution and budget reports ready for the SK office and school records.</p>
+      </article>
+      <article class="lp-bento-wide" data-reveal style="--reveal-delay: 120ms">
+        <span class="lp-ico"><i data-lucide="lock-keyhole"></i></span>
+        <h3>Private by design</h3>
+        <p>Sign-in uses Google. Uploaded IDs and forms are stored in private storage and are only shown to authorized staff, never as public links.</p>
+        <div class="lp-chips"><span>Google sign-in</span><span>Private documents</span><span>Role-based access</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="lp-section lp-sk" id="sk" aria-labelledby="sk-title">
+    <div class="lp-sk-card" data-reveal>
+      <div class="lp-sk-logo">
+        <?php if ($skLogoUrl !== ''): ?>
+          <img src="<?= e($skLogoUrl) ?>" alt="Sangguniang Kabataan of Barangay Cabay logo" loading="lazy">
+        <?php else: ?>
+          <span class="lp-sk-fallback" role="img" aria-label="Sangguniang Kabataan"><i data-lucide="users-round"></i><b>SK</b></span>
+        <?php endif; ?>
+      </div>
+      <div class="lp-sk-copy">
+        <span class="lp-kicker">Our partner &amp; scholarship provider</span>
+        <h2 id="sk-title">Sangguniang Kabataan of Barangay Cabay</h2>
+        <p>Scholarly was proposed for the SK of Barangay Cabay, Tiaong, Quezon. The SK sets the programs, decides who receives support, and gives scholarship assistance to students of the barangay. This system helps them run it with less paperwork and more transparency.</p>
+        <ul class="lp-sk-points">
+          <li><i data-lucide="hand-coins"></i><div><b>Gives the assistance</b><span>Funds and releases scholarship aid to Cabay students.</span></div></li>
+          <li><i data-lucide="clipboard-list"></i><div><b>Runs the programs</b><span>Opens cycles, reviews registrations, and approves scholars.</span></div></li>
+          <li><i data-lucide="scale"></i><div><b>Makes the decisions</b><span>Eligibility, selection, and funding always rest with the SK.</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section" id="programs" aria-labelledby="programs-title">
+    <div class="lp-head lp-head-row" data-reveal>
       <div>
-        <div class="public-section-kicker">01 / CURRENT OPPORTUNITIES</div>
+        <span class="lp-kicker">Current opportunities</span>
         <h2 id="programs-title">Find your next step.</h2>
       </div>
-      <p class="public-section-count"><strong><?= sprintf('%02d', $programCount) ?></strong><span><?= $programCount === 1 ? 'program' : 'programs' ?> listed<br>for Cabay students</span></p>
+      <p><strong><?= sprintf('%02d', $programCount) ?></strong> <?= $programCount === 1 ? 'program' : 'programs' ?> listed for Cabay students</p>
     </div>
 
     <?php if ($programs === []): ?>
-      <div class="public-empty-programs">There are no active scholarship listings right now. Please check back or contact your SK office.</div>
+      <div class="lp-empty" data-reveal>
+        <i data-lucide="calendar-clock"></i>
+        <h3>No active listings right now</h3>
+        <p>New scholarship cycles are posted here when the SK office opens them. Register now so you are ready, or check back soon.</p>
+        <a class="lp-btn lp-btn-primary lp-btn-sm" href="<?= e($register) ?>"><?= e($registerLabel) ?></a>
+      </div>
     <?php else: ?>
-      <div class="public-program-grid">
+      <div class="lp-programs">
         <?php foreach ($programs as $index => $program): ?>
           <?php
             $description = trim((string) ($program['description'] ?? ''));
             if ($description === '' || in_array(strtolower($description), ['test', 'todo', 'placeholder'], true)) {
-              $description = 'Scholarship assistance offered through the Sangguniang Kabataan of Barangay Cabay. Contact the SK office for current eligibility and application dates.';
+              $description = 'Scholarship assistance from the Sangguniang Kabataan of Barangay Cabay. Contact the SK office for current eligibility and dates.';
             }
           ?>
-          <article class="public-program-card" data-reveal style="--reveal-delay: <?= min($index * 90, 360) ?>ms">
-            <div class="public-program-topline"><span>OPPORTUNITY <?= sprintf('%02d', $index + 1) ?></span><span><?= e($program['academic_year']) ?></span></div>
-            <span class="public-program-mark"><i data-lucide="graduation-cap"></i></span>
+          <article data-reveal style="--reveal-delay: <?= min($index * 80, 320) ?>ms">
+            <div class="lp-program-top"><span class="lp-tag"><?= e($program['semester']) ?> · <?= e($program['academic_year']) ?></span><span class="lp-live"><i></i> Active</span></div>
             <h3><?= e($program['name']) ?></h3>
             <p><?= e($description) ?></p>
-            <div class="public-program-award"><span>AWARD PER SCHOLAR</span><strong><?= e(format_money((float) $program['amount'])) ?></strong></div>
-            <div class="public-program-cycle"><i data-lucide="calendar-days"></i><?= e($program['semester']) ?> · <?= e($program['academic_year']) ?></div>
-            <div class="public-program-availability"><span></span>Active listing <i></i> Confirm dates with the SK office</div>
+            <div class="lp-award"><small>Award per scholar</small><strong><?= e(format_money((float) $program['amount'])) ?></strong></div>
           </article>
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
-    <p class="public-program-disclaimer"><i data-lucide="info"></i> Listings are for guidance. Eligibility, schedules, selection, and final funding decisions are confirmed by the SK office.</p>
+    <p class="lp-note"><i data-lucide="info"></i> Listings are for guidance. Eligibility, schedules, selection, and final funding are confirmed by the SK office.</p>
   </section>
 
-  <section class="public-student-tools" id="student-tools" aria-labelledby="student-tools-title" data-reveal>
-    <div class="public-student-tools-heading">
-      <div>
-        <div class="public-section-kicker">02 / FROM APPLICATION TO DISTRIBUTION</div>
-        <h2 id="student-tools-title">Every step, in view.</h2>
+  <section class="lp-section lp-app" id="app" aria-labelledby="app-title">
+    <div class="lp-app-visual" aria-hidden="true" data-reveal>
+      <div class="lp-phone lp-phone-sm">
+        <div class="lp-phone-notch"></div>
+        <div class="lp-phone-screen">
+          <div class="lp-phone-head"><span>My application</span></div>
+          <ul class="lp-timeline">
+            <li class="done"><i></i>Registered</li>
+            <li class="done"><i></i>Documents received</li>
+            <li class="done"><i></i>Approved by SK office</li>
+            <li class="now"><i></i>Voucher issued</li>
+            <li><i></i>Claimed</li>
+          </ul>
+        </div>
       </div>
-      <p>A connected web and mobile experience for students and the Sangguniang Kabataan of Barangay Cabay.</p>
     </div>
-    <div class="public-student-tools-grid">
-      <article data-reveal style="--reveal-delay: 0ms">
-        <span class="public-student-tool-icon"><i data-lucide="file-check-2"></i></span>
-        <span class="public-student-tool-index">01 / REGISTER</span>
-        <h3>Start online</h3>
-        <p>Sign in with Google, complete one registration, and submit your 2x2 photo and enrollment form.</p>
-      </article>
-      <article data-reveal style="--reveal-delay: 100ms">
-        <span class="public-student-tool-icon"><i data-lucide="bell-ring"></i></span>
-        <span class="public-student-tool-index">02 / FOLLOW</span>
-        <h3>Know where you stand</h3>
-        <p>See your current status and SK office notes. If more information is needed, update and resubmit your registration.</p>
-      </article>
-      <article data-reveal style="--reveal-delay: 200ms">
-        <span class="public-student-tool-icon"><i data-lucide="scan-line"></i></span>
-        <span class="public-student-tool-index">03 / RECEIVE</span>
-        <h3>Ready for distribution</h3>
-        <p>Once your scholar profile and voucher are set up, show the matching QR from the app at the distribution desk.</p>
-      </article>
-    </div>
-    <aside class="public-app-download" id="android-app" aria-labelledby="android-app-title">
-      <div class="public-app-download-copy">
-        <span class="public-app-download-kicker"><i data-lucide="smartphone"></i> ANDROID APP</span>
-        <h3 id="android-app-title">Your scholarship updates, on mobile.</h3>
-        <p>Track registration progress, read SK office updates, view your profile, and show voucher QR codes when they are issued.</p>
-      </div>
+    <div class="lp-app-copy" data-reveal>
+      <span class="lp-kicker">Android app</span>
+      <h2 id="app-title">Your scholarship, in your pocket.</h2>
+      <p>Follow your registration, read SK office updates, view your profile, and show your voucher QR on distribution day, even when you are in line.</p>
+      <ul class="lp-checks">
+        <li><i data-lucide="check"></i> Live application status</li>
+        <li><i data-lucide="check"></i> Profile and voucher QR codes</li>
+        <li><i data-lucide="check"></i> Claim history</li>
+      </ul>
       <?php if ($mobileDownloadUrl !== ''): ?>
-        <a class="public-button-primary" href="<?= e($mobileDownloadUrl) ?>" target="_blank" rel="noopener noreferrer">Download Android app <i data-lucide="download"></i></a>
+        <a class="lp-btn lp-btn-primary" href="<?= e($mobileDownloadUrl) ?>" target="_blank" rel="noopener noreferrer">Download Android app <i data-lucide="download"></i></a>
       <?php else: ?>
-        <span class="public-app-download-soon"><i data-lucide="clock-3"></i> Android download coming soon</span>
+        <span class="lp-soon"><i data-lucide="clock-3"></i> Android download coming soon</span>
       <?php endif; ?>
-    </aside>
+    </div>
   </section>
 
-  <section class="public-team" id="team" aria-labelledby="team-title" data-reveal>
-    <div class="public-team-heading">
-      <div class="public-section-kicker">03 / THE PEOPLE BEHIND SCHOLARLY</div>
-      <h2 id="team-title">A local project.<br>A student team.</h2>
-      <p>Scholarly is a 4th-year capstone at SLSU Tiaong, created around a real community need in Barangay Cabay, Tiaong, Quezon.</p>
+  <section class="lp-section" id="faq" aria-labelledby="faq-title">
+    <div class="lp-head" data-reveal>
+      <span class="lp-kicker">FAQ</span>
+      <h2 id="faq-title">Good to know.</h2>
     </div>
-    <div class="public-team-grid" aria-label="Capstone project team">
-      <article class="public-team-member" data-reveal style="--reveal-delay: 0ms">
-        <img class="public-team-photo" src="<?= e(base_url('assets/images/team/neil-garcia.jpg')) ?>" alt="Neil Jr. P. Garcia" loading="lazy">
-        <div><span class="public-team-role">SLSU TIAONG · 4TH YEAR</span><h3>Garcia, Neil Jr. P.</h3></div>
-      </article>
-      <article class="public-team-member" data-reveal style="--reveal-delay: 90ms">
-        <img class="public-team-photo" src="<?= e(base_url('assets/images/team/kier-dolor.jpg')) ?>" alt="Kier Dolor" loading="lazy">
-        <div><span class="public-team-role">SLSU TIAONG · 4TH YEAR</span><h3>Dolor, Kier</h3></div>
-      </article>
-      <article class="public-team-member" data-reveal style="--reveal-delay: 180ms">
-        <img class="public-team-photo" src="<?= e(base_url('assets/images/team/lray-aquino.jpg')) ?>" alt="LRay Aquino" loading="lazy">
-        <div><span class="public-team-role">SLSU TIAONG · 4TH YEAR</span><h3>Aquino, LRay</h3></div>
-      </article>
+    <div class="lp-faq" data-reveal>
+      <details>
+        <summary>Who can apply?</summary>
+        <p>Eligibility is set by the SK office for each program. Register first, then the SK office confirms whether you qualify for a listed program.</p>
+      </details>
+      <details>
+        <summary>What do I need to register?</summary>
+        <p>A Google account, your personal and school details, a 2x2 photo, and your enrollment form.</p>
+      </details>
+      <details>
+        <summary>How will I know my status?</summary>
+        <p>Sign in on the web or the Android app to see your current status and any notes from the SK office. If more information is needed, you can update and resubmit.</p>
+      </details>
+      <details>
+        <summary>How do I claim my assistance?</summary>
+        <p>When a distribution batch opens and your voucher is issued, show the QR from the app at the distribution desk. Staff will scan it to record your claim.</p>
+      </details>
+      <details>
+        <summary>Is my information safe?</summary>
+        <p>Documents are kept in private storage and are only available to authorized staff. Actions in the system are recorded in an audit log.</p>
+      </details>
+      <details>
+        <summary>Who decides who receives funding?</summary>
+        <p>The SK office. Scholarly is a tool that supports their process; it does not decide selection or funding.</p>
+      </details>
     </div>
-    <p class="public-team-note">A student-led capstone prototype. Scholarship eligibility, selection, and funding decisions remain with the SK office.</p>
+  </section>
+
+  <section class="lp-section lp-team" id="team" aria-labelledby="team-title">
+    <div class="lp-head" data-reveal>
+      <span class="lp-kicker">The people behind Scholarly</span>
+      <h2 id="team-title">A local project. A student team.</h2>
+      <p>Scholarly is a 4th-year capstone at SLSU Tiaong, built around a real need in Barangay Cabay.</p>
+    </div>
+    <div class="lp-team-grid">
+      <?php foreach ([
+        ['neil-garcia.jpg', 'Neil Jr. P. Garcia', 'Garcia, Neil Jr. P.'],
+        ['kier-dolor.jpg', 'Kier Dolor', 'Dolor, Kier'],
+        ['lray-aquino.jpg', 'LRay Aquino', 'Aquino, LRay'],
+      ] as $i => [$file, $alt, $name]): ?>
+        <article data-reveal style="--reveal-delay: <?= $i * 90 ?>ms">
+          <img src="<?= e(base_url('assets/images/team/' . $file)) ?>" alt="<?= e($alt) ?>" loading="lazy">
+          <h3><?= e($name) ?></h3>
+          <span>SLSU Tiaong · 4th Year</span>
+        </article>
+      <?php endforeach; ?>
+    </div>
+  </section>
+
+  <section class="lp-cta" data-reveal>
+    <h2>Ready when the next cycle opens.</h2>
+    <p>Register once and be set for every distribution.</p>
+    <div class="lp-actions lp-actions-center">
+      <a class="lp-btn lp-btn-primary" href="<?= e($register) ?>"><?= e($registerLabel) ?> <i data-lucide="arrow-up-right"></i></a>
+      <a class="lp-btn lp-btn-ghost" href="<?= e(base_url('login.php')) ?>">Staff portal</a>
+    </div>
   </section>
 </main>
 
-<footer class="public-footer">
-  <a class="public-brand" href="<?= e(base_url('index.php')) ?>">
-    <span class="public-brand-icon"><i data-lucide="graduation-cap"></i></span>
-    <span>Scholarly<span class="public-brand-dot">.</span><small>SLSU TIAONG · BRGY. CABAY</small></span>
-  </a>
-  <span>SLSU Tiaong capstone project · Sangguniang Kabataan, Barangay Cabay, Tiaong, Quezon</span>
-  <a href="<?= e(base_url('login.php')) ?>">Staff sign in</a>
+<footer class="lp-footer">
+  <div class="lp-footer-brand">
+    <a class="lp-brand" href="<?= e(base_url('index.php')) ?>">
+      <img src="<?= e(base_url('assets/images/slsu-tiaong-logo.png')) ?>" alt="" width="36" height="36">
+      <?php if ($skLogoUrl !== ''): ?><img src="<?= e($skLogoUrl) ?>" alt="" width="36" height="36"><?php endif; ?>
+      <span>Scholarly<b>.</b><small>SLSU Tiaong · Brgy. Cabay</small></span>
+    </a>
+    <p>A student-led capstone prototype for the Sangguniang Kabataan of Barangay Cabay, Tiaong, Quezon.</p>
+  </div>
+  <nav aria-label="Footer">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#programs">Programs</a>
+    <a href="#faq">FAQ</a>
+    <a href="<?= e(base_url('login.php')) ?>">Staff sign in</a>
+  </nav>
+  <small>© <?= date('Y') ?> Scholarly · SLSU Tiaong capstone project. Eligibility and funding decisions remain with the SK office.</small>
 </footer>
+</div>

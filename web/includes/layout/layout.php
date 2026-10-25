@@ -56,6 +56,9 @@ function render_head(string $title): void
     if (!empty(page_assets()['public'])) {
         echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/public.css')) . "\">\n";
     }
+    if (!empty(page_assets()['landing'])) {
+        echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/landing.css')) . "\">\n";
+    }
     if (!empty(page_assets()['applications'])) {
         echo '  <link rel="stylesheet" href="' . e(asset_url('assets/css/applications.css')) . "\">\n";
     }
@@ -82,12 +85,15 @@ function render_foot(): void
         echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>' . "\n";
     }
     echo '<script src="' . e(asset_url('assets/js/app.js')) . '"></script>' . "\n";
+    if (!empty(page_assets()['landing'])) {
+        echo '<script src="' . e(asset_url('assets/js/landing.js')) . '"></script>' . "\n";
+    }
     echo "</body></html>\n";
 }
 
-function render_public_layout(string $title, callable $content): void
+function render_public_layout(string $title, callable $content, array $assets = []): void
 {
-    $GLOBALS['page_assets'] = ['public' => true];
+    $GLOBALS['page_assets'] = ['public' => true] + $assets;
     render_head($title);
     $content();
     render_foot();

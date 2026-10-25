@@ -35,6 +35,6 @@ final class PublicHomeController
                 'googleConfigured' => $googleConfigured,
                 'mobileDownloadUrl' => $mobileDownloadUrl,
             ]);
-        });
+        }, ['landing' => true]);
     }
 }

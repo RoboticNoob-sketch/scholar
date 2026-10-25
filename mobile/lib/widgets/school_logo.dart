@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class SchoolLogo extends StatelessWidget {
-  const SchoolLogo({super.key, this.size = 64});
+  const SchoolLogo({super.key, this.size = 64, this.asset = _asset});
 
   final double size;
+  final String asset;
 
   static const _asset = 'assets/images/slsu-tiaong-logo.png';
+  static const skAsset = 'assets/images/sk-cabay-logo.png';
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +21,7 @@ class SchoolLogo extends StatelessWidget {
       padding: EdgeInsets.all(size * 0.06),
       child: ClipOval(
         child: Image.asset(
-          _asset,
+          asset,
           fit: BoxFit.contain,
           errorBuilder: (_, __, ___) => Icon(Icons.school, size: size * 0.5, color: Colors.grey),
         ),
