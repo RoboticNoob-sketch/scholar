@@ -20,6 +20,7 @@ $skLogoUrl = is_file($skLogoPath) ? asset_url('assets/images/sk-cabay-logo.png')
     <a href="#sk">SK Cabay</a>
     <a href="#programs">Programs</a>
     <a href="#faq">FAQ</a>
+    <?php if ($mobileDownloadUrl !== ''): ?><a class="lp-menu-app" href="#app"><i data-lucide="smartphone"></i> Get the app</a><?php endif; ?>
     <a class="lp-menu-login" href="<?= e(base_url('login.php')) ?>">Staff portal</a>
     <a class="lp-btn lp-btn-primary lp-btn-sm" href="<?= e($register) ?>"><?= e($registerLabel) ?> <i data-lucide="arrow-up-right"></i></a>
   </nav>
@@ -33,7 +34,11 @@ $skLogoUrl = is_file($skLogoPath) ? asset_url('assets/images/sk-cabay-logo.png')
       <p>Register online, follow your application, and claim your assistance with a secure QR voucher. One connected system for students, the SK office, and approvers.</p>
       <div class="lp-actions">
         <a class="lp-btn lp-btn-primary" href="<?= e($register) ?>"><?= e($registerLabel) ?> <i data-lucide="arrow-up-right"></i></a>
-        <a class="lp-btn lp-btn-ghost" href="#how">See how it works <i data-lucide="arrow-down"></i></a>
+        <?php if ($mobileDownloadUrl !== ''): ?>
+          <a class="lp-btn lp-btn-ghost" href="#app"><i data-lucide="smartphone"></i> Get the Android app</a>
+        <?php else: ?>
+          <a class="lp-btn lp-btn-ghost" href="#how">See how it works <i data-lucide="arrow-down"></i></a>
+        <?php endif; ?>
       </div>
       <ul class="lp-hero-trust">
         <li><i data-lucide="shield-check"></i> Google sign-in</li>
@@ -248,16 +253,30 @@ $skLogoUrl = is_file($skLogoPath) ? asset_url('assets/images/sk-cabay-logo.png')
       </div>
     </div>
     <div class="lp-app-copy" data-reveal>
-      <span class="lp-kicker">Android app</span>
-      <h2 id="app-title">Your scholarship, in your pocket.</h2>
-      <p>Follow your registration, read SK office updates, view your profile, and show your voucher QR on distribution day, even when you are in line.</p>
+      <span class="lp-kicker">Free Android app</span>
+      <h2 id="app-title">Skip the line stress. Carry your scholarship in your pocket.</h2>
+      <p>On distribution day, your QR is all you need. Open the app, show it at the desk, and you're done. No paperwork to dig up, no guessing about your status.</p>
       <ul class="lp-checks">
-        <li><i data-lucide="check"></i> Live application status</li>
-        <li><i data-lucide="check"></i> Profile and voucher QR codes</li>
-        <li><i data-lucide="check"></i> Claim history</li>
+        <li><i data-lucide="check"></i> Live application status, updated the moment the SK office acts</li>
+        <li><i data-lucide="check"></i> Your profile and voucher QR, ready even with a weak signal at the venue</li>
+        <li><i data-lucide="check"></i> Full claim history, so you always know what you've received</li>
       </ul>
       <?php if ($mobileDownloadUrl !== ''): ?>
-        <a class="lp-btn lp-btn-primary" href="<?= e($mobileDownloadUrl) ?>" target="_blank" rel="noopener noreferrer">Download Android app <i data-lucide="download"></i></a>
+        <div class="lp-dl">
+          <a class="lp-btn lp-btn-primary lp-btn-lg" href="<?= e($mobileDownloadUrl) ?>" target="_blank" rel="noopener noreferrer" data-lp-download>
+            <i data-lucide="download"></i> Download for Android
+          </a>
+          <ul class="lp-dl-meta">
+            <li><i data-lucide="badge-check"></i> Free</li>
+            <li><i data-lucide="shield-check"></i> Official SK Cabay app</li>
+            <li><i data-lucide="smartphone"></i> Android 6.0+</li>
+          </ul>
+        </div>
+        <ol class="lp-dl-steps">
+          <li><b>1</b> Tap download and open the file</li>
+          <li><b>2</b> Allow “install from this source” if Android asks</li>
+          <li><b>3</b> Sign in with the same Google account</li>
+        </ol>
       <?php else: ?>
         <span class="lp-soon"><i data-lucide="clock-3"></i> Android download coming soon</span>
       <?php endif; ?>
@@ -323,9 +342,18 @@ $skLogoUrl = is_file($skLogoPath) ? asset_url('assets/images/sk-cabay-logo.png')
     <p>Register once and be set for every distribution.</p>
     <div class="lp-actions lp-actions-center">
       <a class="lp-btn lp-btn-primary" href="<?= e($register) ?>"><?= e($registerLabel) ?> <i data-lucide="arrow-up-right"></i></a>
+      <?php if ($mobileDownloadUrl !== ''): ?>
+        <a class="lp-btn lp-btn-ghost" href="<?= e($mobileDownloadUrl) ?>" target="_blank" rel="noopener noreferrer" data-lp-download><i data-lucide="download"></i> Download the app</a>
+      <?php endif; ?>
       <a class="lp-btn lp-btn-ghost" href="<?= e(base_url('login.php')) ?>">Staff portal</a>
     </div>
   </section>
+
+  <?php if ($mobileDownloadUrl !== ''): ?>
+    <a class="lp-sticky-dl" href="<?= e($mobileDownloadUrl) ?>" target="_blank" rel="noopener noreferrer" data-lp-download>
+      <i data-lucide="download"></i> Get the Android app
+    </a>
+  <?php endif; ?>
 </main>
 
 <footer class="lp-footer">

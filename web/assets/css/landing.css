@@ -232,3 +232,21 @@
   .lp-float { animation: none; }
   .lp-btn, .lp-steps li, .lp-bento article, .lp-programs article { transition: none; }
 }
+
+/* App download CTA */
+.lp-btn-lg { padding: 18px 34px; font-size: 1.05rem; }
+.lp-dl { display: grid; gap: 16px; justify-items: start; }
+.lp-dl-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--text-secondary); font-size: .85rem; }
+.lp-dl-meta li { display: inline-flex; align-items: center; gap: 6px; }
+.lp-dl-meta svg { width: 16px; height: 16px; color: var(--accent); }
+.lp-dl-steps { display: grid; gap: 10px; margin-top: 26px; padding: 18px 20px; border: 1px dashed var(--lp-line); border-radius: 16px; background: rgba(168,230,107,.04); font-size: .88rem; color: var(--silver-bright, #cbcbcb); }
+.lp-dl-steps li { display: flex; gap: 12px; align-items: center; }
+.lp-dl-steps b { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--text-on-accent, #12200f); font-size: .75rem; }
+.lp-menu .lp-menu-app { display: inline-flex; align-items: center; gap: 6px; color: var(--accent) !important; font-weight: 600; }
+.lp-menu .lp-menu-app svg { width: 15px; height: 15px; }
+.lp-sticky-dl { display: none; }
+@media (max-width: 720px) { .lp-sticky-dl { position: fixed; left: 14px; right: 14px; bottom: 14px; z-index: 60; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 999px; background: var(--accent); color: var(--text-on-accent, #12200f); font-weight: 700; box-shadow: 0 14px 34px -8px rgba(0,0,0,.7); transform: translateY(140%); transition: transform .3s; } .lp-sticky-dl.is-visible { transform: none; } .lp-footer { padding-bottom: 90px; } }
+.lp-app-copy .lp-checks { margin: 22px 0 28px; }
+.lp-app-copy .lp-dl { margin-top: 8px; gap: 18px; }
+.lp-app-copy .lp-dl-steps { margin-top: 30px; padding: 20px 22px; gap: 14px; }
+.lp-app-copy .lp-dl-steps li { padding: 0; }
