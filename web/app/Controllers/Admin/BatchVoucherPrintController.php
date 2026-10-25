@@ -32,7 +32,7 @@ final class BatchVoucherPrintController
         }
 
         $voucherStmt = $pdo->prepare(
-            'SELECT v.voucher_code, v.amount, s.student_no, s.first_name, s.last_name
+            'SELECT v.voucher_code, v.amount, s.student_no, s.first_name, s.last_name, s.public_id, s.qr_token
              FROM claim_vouchers v
              JOIN scholars s ON s.id = v.scholar_id
              WHERE v.batch_id = ? AND v.status = "pending"
@@ -63,7 +63,8 @@ final class BatchVoucherPrintController
             echo '<div class="print-voucher-sheet">';
             foreach ($vouchers as $voucher) {
                 $fullName = trim($voucher['first_name'] . ' ' . $voucher['last_name']);
-                $payload = 'VCH|' . $voucher['voucher_code'];
+                $payload = voucher_qr_payload($voucher['voucher_code']);
+                $profilePayload = profile_qr_payload($voucher);
                 echo '<article class="print-voucher">';
                 echo '<header class="print-voucher-head">';
                 echo '<img src="' . e(school_logo_url()) . '" alt="" class="print-voucher-logo">';
@@ -71,7 +72,6 @@ final class BatchVoucherPrintController
                 echo '<span class="print-voucher-type">OFFICE CLAIM</span>';
                 echo '</header>';
                 echo '<div class="print-voucher-body">';
-                echo '<div class="print-voucher-qr" data-voucher-qr="' . e($payload) . '"></div>';
                 echo '<div class="print-voucher-details">';
                 echo '<div class="print-voucher-eyebrow">Physical claim voucher</div>';
                 echo '<h2>' . e($fullName) . '</h2>';
@@ -79,12 +79,16 @@ final class BatchVoucherPrintController
                 echo '<div class="print-voucher-amount">' . e(format_money((float) $voucher['amount'])) . '</div>';
                 echo '<div class="print-voucher-code-label">Voucher code</div>';
                 echo '<code class="print-voucher-code">' . e($voucher['voucher_code']) . '</code>';
+                echo '</div>';
+                echo '<div class="print-voucher-qrs">';
+                echo '<figure class="print-voucher-qrbox"><div class="print-voucher-qr" data-voucher-qr="' . e($profilePayload) . '"></div><figcaption><strong>1 · Profile QR</strong><span>Scan first</span></figcaption></figure>';
+                echo '<figure class="print-voucher-qrbox"><div class="print-voucher-qr" data-voucher-qr="' . e($payload) . '"></div><figcaption><strong>2 · Voucher QR</strong><span>Scan second</span></figcaption></figure>';
                 echo '</div></div>';
                 echo '<div class="print-voucher-batch">';
                 echo '<div><span>Program</span><strong>' . e($batch['program_name']) . '</strong></div>';
                 echo '<div><span>Distribution</span><strong>' . e(format_date($batch['distribution_date'])) . ' · ' . e($batch['venue']) . '</strong></div>';
                 echo '</div>';
-                echo '<footer class="print-voucher-foot"><strong>NO PHONE REQUIRED</strong><span>Present this voucher and your school ID at the office while distribution is open. One-time claim; keep this code private.</span></footer>';
+                echo '<footer class="print-voucher-foot"><strong>NO PHONE REQUIRED</strong><span>Present this ticket and your school ID at the office. Staff scan the Profile QR first, then the Voucher QR. One-time claim; keep it private.</span></footer>';
                 echo '<section class="print-voucher-stub" aria-label="Office claim record">';
                 echo '<div class="print-voucher-tear"><i data-lucide="scissors"></i><span>DETACH AFTER CLAIM</span></div>';
                 echo '<div class="print-voucher-stub-content">';

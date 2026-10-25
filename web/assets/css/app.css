@@ -1382,7 +1382,11 @@ input[type="checkbox"] {
 .print-voucher-brand strong { font: 700 14px var(--font-title); }
 .print-voucher-brand span { color: #526258; font-size: 9px; }
 .print-voucher-type { margin-left: auto; color: #345a3e; font-size: 8px; font-weight: 800; letter-spacing: 0.8px; }
-.print-voucher-body { display: grid; grid-template-columns: 124px minmax(0, 1fr); align-items: center; gap: 14px; padding: 14px 0; }
+.print-voucher-body { display: grid; gap: 10px; padding: 12px 0; }
+.print-voucher-qrs { display: flex; justify-content: center; gap: 18px; }
+.print-voucher-qrbox { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.print-voucher-qrbox figcaption { display: grid; text-align: center; font-size: 8px; color: #526258; }
+.print-voucher-qrbox figcaption strong { color: #102017; font-weight: 800; letter-spacing: 0.3px; }
 .print-voucher-qr { width: 124px; height: 124px; display: grid; place-items: center; background: #fff; }
 .print-voucher-qr canvas,
 .print-voucher-qr img { display: block; width: 124px; height: 124px; }
@@ -1789,10 +1793,14 @@ body {
   padding: 12px 0 12px 14px;
 }
 .print-voucher-head { grid-column: 1; grid-row: 1; margin-right: 12px; padding-bottom: 8px; }
-.print-voucher-body { grid-column: 1; grid-row: 2; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 8px 12px 8px 0; }
+.print-voucher-body { grid-column: 1; grid-row: 2; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px 12px 8px 0; }
 .print-voucher-qr { width: 112px; height: 112px; }
 .print-voucher-qr canvas,
 .print-voucher-qr img { width: 112px; height: 112px; }
+.print-voucher-details { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline; }
+.print-voucher-details > * { grid-column: 1; }
+.print-voucher-details .print-voucher-amount { grid-column: 2; grid-row: 2 / 4; margin-top: 0; align-self: center; }
+.print-voucher-details .print-voucher-code-label, .print-voucher-details .print-voucher-code { grid-column: 2; text-align: right; }
 .print-voucher-batch { grid-column: 1; grid-row: 3; gap: 5px; margin-right: 12px; padding: 8px 0; }
 .print-voucher-foot { grid-column: 1; grid-row: 4; margin-right: 12px; padding-top: 7px; }
 .print-voucher-stub {
@@ -1837,9 +1845,10 @@ body {
 @media (max-width: 560px) {
   .print-voucher { grid-template-columns: minmax(0, 1fr) 108px; padding-left: 9px; }
   .print-voucher-head, .print-voucher-batch, .print-voucher-foot { margin-right: 8px; }
-  .print-voucher-body { grid-template-columns: 78px minmax(0, 1fr); gap: 7px; padding-right: 8px; }
-  .print-voucher-qr { width: 78px; height: 78px; }
-  .print-voucher-qr canvas, .print-voucher-qr img { width: 78px; height: 78px; }
+  .print-voucher-body { grid-template-columns: minmax(0, 1fr); gap: 7px; padding-right: 8px; }
+  .print-voucher-qr { width: 84px; height: 84px; }
+  .print-voucher-qr canvas, .print-voucher-qr img { width: 84px; height: 84px; }
+  .print-voucher-qrs { gap: 10px; }
   .print-voucher-details h2 { font-size: 13px; }
   .print-voucher-amount { font-size: 17px; }
   .print-voucher-stub { margin-block: -12px; padding: 10px 6px 10px 10px; }
@@ -1848,11 +1857,24 @@ body {
 
 @media print {
   @page { size: A4 landscape; margin: 8mm; }
-  .print-voucher { min-height: 76mm; grid-template-columns: minmax(0, 1fr) 38mm; padding: 3mm 0 3mm 3mm; }
+  .print-voucher { min-height: 0; grid-template-columns: minmax(0, 1fr) 38mm; padding: 3mm 0 3mm 3mm; }
   .print-voucher-head, .print-voucher-batch, .print-voucher-foot { margin-right: 3mm; }
-  .print-voucher-body { grid-template-columns: 30mm minmax(0, 1fr); gap: 3mm; padding: 2mm 3mm 2mm 0; }
-  .print-voucher-qr { width: 30mm; height: 30mm; }
-  .print-voucher-qr canvas, .print-voucher-qr img { width: 30mm; height: 30mm; }
+  .print-voucher-body { grid-template-columns: minmax(0, 1fr); gap: 2mm; padding: 2mm 3mm 2mm 0; }
+  .print-voucher-qr { width: 24mm; height: 24mm; }
+  .print-voucher-qr canvas, .print-voucher-qr img { width: 24mm; height: 24mm; }
+  .print-voucher-details .print-voucher-code-label { display: none; }
+  .print-voucher-details .print-voucher-amount { grid-row: 2 / 3; }
+  .print-voucher-details .print-voucher-code { grid-row: 3; }
+  .print-voucher-foot span { line-height: 1.3; }
+  .print-voucher-qrs { gap: 6mm; }
+  .print-voucher-qrbox { gap: 1mm; }
+  .print-voucher-qrbox figcaption { font-size: 6pt; }
+  .print-voucher-head { padding-bottom: 1.5mm; }
+  .print-voucher-body { padding-block: 1.5mm; gap: 1.5mm; }
+  .print-voucher-details h2 { font-size: 13px; margin: 2px 0 1px; }
+  .print-voucher-details .print-voucher-amount { font-size: 17px; }
+  .print-voucher-batch { padding-block: 1.5mm; gap: 2px; }
+  .print-voucher-foot { padding-top: 1.5mm; }
   .print-voucher-stub { grid-row: 1 / 5; margin: -3mm 0; padding: 3mm 2mm 3mm 3mm; }
   .print-voucher-tear { left: -2mm; gap: 1mm; width: 4mm; padding: 2mm 0; font-size: 5pt; }
   .print-voucher-stub-content { gap: 2mm; padding: 2mm 0; }
