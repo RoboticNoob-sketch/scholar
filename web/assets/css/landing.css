@@ -201,7 +201,8 @@
 @media (max-width: 980px) {
   .lp-sk-card { grid-template-columns: 1fr; text-align: left; }
   .lp-sk-logo { justify-items: start; }
-  .lp-sk-points { grid-template-columns: 1fr; }
+  .lp-sk-logo img { max-width: 160px; }
+  .lp .lp-sk-points { grid-template-columns: 1fr; }
   .lp-hero { grid-template-columns: 1fr; }
   .lp-hero-visual { min-height: 480px; }
   .lp-steps { grid-template-columns: repeat(2, 1fr); }
