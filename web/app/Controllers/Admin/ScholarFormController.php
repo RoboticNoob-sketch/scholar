@@ -101,6 +101,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        $duplicate = $pdo->prepare('SELECT id FROM scholars WHERE student_no = ? AND id <> ? LIMIT 1');
+        $duplicate->execute([$studentNo, $postId]);
+        if ($duplicate->fetchColumn()) {
+            throw new RuntimeException('That student number is already used by another scholar.');
+        }
+
         if ($postId > 0) {
             $pdo->beginTransaction();
             $stmt = $pdo->prepare('SELECT * FROM scholars WHERE id = ?');
@@ -185,7 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        flash('error', $e->getMessage() !== '' ? $e->getMessage() : 'Could not save scholar. Check student no. and username are unique.');
+        $isDuplicate = $e instanceof PDOException && $e->getCode() === '23000';
+        flash('error', $isDuplicate
+            ? 'The student number or username is already in use.'
+            : ($e->getMessage() !== '' ? $e->getMessage() : 'Could not save scholar. Check student no. and username are unique.'));
         redirect($postId > 0 ? 'admin/scholar-form.php?id=' . $postId : 'admin/scholar-form.php');
     }
 }
