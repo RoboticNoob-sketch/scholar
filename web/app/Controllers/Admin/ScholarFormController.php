@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use PDO;
+use PDOException;
+use RuntimeException;
+use Throwable;
 
 function scholar_course_options(): array
 {
